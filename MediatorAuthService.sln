@@ -15,13 +15,15 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Infrastructure", "Infrastru
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Presentation", "Presentation", "{DCDEC5C5-0477-4A43-8E41-E0126D8DBED1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MediatorAuthService.Api", "src\Presentation\MediatorAuthService.Api\MediatorAuthService.Api.csproj", "{C7FBDF86-7CFA-4C1C-B31E-156BD7B0FD63}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MediatorAuthService.Api", "src\Presentation\MediatorAuthService.Api\MediatorAuthService.Api.csproj", "{C7FBDF86-7CFA-4C1C-B31E-156BD7B0FD63}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MediatorAuthService.Domain", "src\Domain\MediatorAuthService.Domain\MediatorAuthService.Domain.csproj", "{FDF590E3-CFE2-42F1-A0D0-FD950F282520}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MediatorAuthService.Domain", "src\Domain\MediatorAuthService.Domain\MediatorAuthService.Domain.csproj", "{FDF590E3-CFE2-42F1-A0D0-FD950F282520}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MediatorAuthService.Domain.Core", "src\Domain\MediatorAuthService.Domain.Core\MediatorAuthService.Domain.Core.csproj", "{0703FF6F-A7B8-4898-BB7F-4DFE36F2F0BD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MediatorAuthService.Domain.Core", "src\Domain\MediatorAuthService.Domain.Core\MediatorAuthService.Domain.Core.csproj", "{0703FF6F-A7B8-4898-BB7F-4DFE36F2F0BD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MediatorAuthService.Infrastructure", "src\Infrastructure\MediatorAuthService.Infrastructure\MediatorAuthService.Infrastructure.csproj", "{AD9CFCD7-3956-4ADA-88EC-F65EF45B0BA2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MediatorAuthService.Infrastructure", "src\Infrastructure\MediatorAuthService.Infrastructure\MediatorAuthService.Infrastructure.csproj", "{AD9CFCD7-3956-4ADA-88EC-F65EF45B0BA2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MediatorAuthService.Application", "src\Application\MediatorAuthService.Application\MediatorAuthService.Application.csproj", "{087BCDCE-8C50-4E23-9BD9-EA90954BA9F7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -45,6 +47,10 @@ Global
 		{AD9CFCD7-3956-4ADA-88EC-F65EF45B0BA2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AD9CFCD7-3956-4ADA-88EC-F65EF45B0BA2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AD9CFCD7-3956-4ADA-88EC-F65EF45B0BA2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{087BCDCE-8C50-4E23-9BD9-EA90954BA9F7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{087BCDCE-8C50-4E23-9BD9-EA90954BA9F7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{087BCDCE-8C50-4E23-9BD9-EA90954BA9F7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{087BCDCE-8C50-4E23-9BD9-EA90954BA9F7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -58,6 +64,7 @@ Global
 		{FDF590E3-CFE2-42F1-A0D0-FD950F282520} = {A90A5C4B-4C2E-41E3-BBF9-89C5FB2C3197}
 		{0703FF6F-A7B8-4898-BB7F-4DFE36F2F0BD} = {A90A5C4B-4C2E-41E3-BBF9-89C5FB2C3197}
 		{AD9CFCD7-3956-4ADA-88EC-F65EF45B0BA2} = {EE4C0D1E-3322-45F6-818E-6F7235E0B4CE}
+		{087BCDCE-8C50-4E23-9BD9-EA90954BA9F7} = {91C8F677-74E4-42A6-ABFD-3411E513BFAB}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {8E5F60DD-1D73-40A3-9F03-254C8540CFDF}

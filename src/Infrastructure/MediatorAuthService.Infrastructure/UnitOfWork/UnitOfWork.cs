@@ -23,7 +23,7 @@ public class UnitOfWork<TContext> : IUnitOfWork<TContext>, IUnitOfWork where TCo
 
     internal object GetOrAddRepository(Type type, object repo)
     {
-        if(_repositories is null)
+        if (_repositories is null)
             _repositories = new Dictionary<Type, object>();
 
         if (_repositories.TryGetValue(type, out object repository))
@@ -40,8 +40,19 @@ public class UnitOfWork<TContext> : IUnitOfWork<TContext>, IUnitOfWork where TCo
 
     public async ValueTask DisposeAsync()
     {
-        await DisposeAsync();
+        await DisposeAsync(true);
+
         GC.SuppressFinalize(this);
     }
 
+    protected virtual async Task DisposeAsync(bool disposing)
+    {
+        if (disposing)
+        {
+            if (_repositories != null)
+                _repositories.Clear();
+
+            await Context.DisposeAsync();
+        }
+    }
 }
