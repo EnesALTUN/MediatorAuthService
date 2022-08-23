@@ -28,17 +28,21 @@ public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEnt
         return entity;
     }
 
-    public IQueryable<TEntity> GetAll(PaginationParams paginationParams)
+    public (IQueryable<TEntity>, int) GetAll(PaginationParams paginationParams)
     {
         var query = _dbSet.AsNoTracking();
+
+        int count = query.Count();
 
         query = string.IsNullOrEmpty(paginationParams.OrderKey)
             ? query.OrderByDescending(x => x.CreatedDate)
             : query.OrderBy(paginationParams.OrderKey, paginationParams.OrderType ?? "ascending");
 
-        return query
+        query = query
             .Skip((paginationParams.PageId - 1) * paginationParams.PageSize)
             .Take(paginationParams.PageSize);
+
+        return (query, count);
     }
 
     public IQueryable<TEntity> Where(Expression<Func<TEntity, bool>> predicate)
