@@ -8,7 +8,7 @@ public interface IGenericRepository<TEntity> where TEntity : IEntity
 {
     Task<TEntity> GetByIdAsync(Guid id);
 
-    IQueryable<TEntity> GetAll(PaginationParams paginationParams);
+    (IQueryable<TEntity>, int) GetAll(PaginationParams paginationParams);
 
     IQueryable<TEntity> Where(Expression<Func<TEntity, bool>> predicate);
 
