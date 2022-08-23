@@ -1,5 +1,7 @@
-﻿using MediatorAuthService.Application.Cqrs.Queries.UserQueries;
+﻿using MediatorAuthService.Api.Controllers.Base;
+using MediatorAuthService.Application.Cqrs.Queries.UserQueries;
 using MediatorAuthService.Domain.Core.Pagination;
+using MediatorAuthService.Domain.Entities;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -7,7 +9,7 @@ namespace MediatorAuthService.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class UserController : ControllerBase
+    public class UserController : MediatorBaseController
     {
         private readonly IMediator _mediator;
 
@@ -21,7 +23,7 @@ namespace MediatorAuthService.Api.Controllers
         {
             var response = await _mediator.Send(new GetUserByIdQuery(id));
 
-            return Ok(response);
+            return ActionResultInstance<User>(response);
         }
 
         [HttpGet]
@@ -29,7 +31,15 @@ namespace MediatorAuthService.Api.Controllers
         {
             var response = await _mediator.Send(new GetUserAllQuery(paginationParams));
 
-            return Ok(response);
+            return ActionResultInstance<List<User>>(response);
+        }
+
+        [HttpGet("{email}")]
+        public async Task<IActionResult> GetUserByEmail(string email)
+        {
+            var response = await _mediator.Send(new GetUserByEmailQuery(email));
+
+            return ActionResultInstance<User>(response);
         }
     }
 }
