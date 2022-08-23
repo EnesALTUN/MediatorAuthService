@@ -1,4 +1,5 @@
 using MediatorAuthService.Application;
+using MediatorAuthService.Application.Middlewares;
 using MediatorAuthService.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,6 +18,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseMiddleware<ExceptionHandlerMiddleware>();
 
 app.UseHttpsRedirection();
 
