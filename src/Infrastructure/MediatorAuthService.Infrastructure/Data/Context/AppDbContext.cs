@@ -28,20 +28,22 @@ public class AppDbContext : DbContext
 
         ChangeTracker.Entries().ToList().ForEach(e =>
         {
+            BaseEntity baseEntity = (BaseEntity)e.Entity;
+
             switch (e.State)
             {
                 case EntityState.Added:
-                    ((BaseEntity)e.Entity).CreatedDate = DateTime.Now;
-                    ((BaseEntity)e.Entity).CreatedUserId = currentUserId;
-                    ((BaseEntity)e.Entity).IsActive = true;
+                    baseEntity.CreatedDate = DateTime.Now;
+                    baseEntity.CreatedUserId = currentUserId;
+                    baseEntity.IsActive = true;
                     break;
                 case EntityState.Modified:
-                    ((BaseEntity)e.Entity).ModifiedDate = DateTime.Now;
-                    ((BaseEntity)e.Entity).ModifiedUserId = currentUserId;
+                    baseEntity.ModifiedDate = DateTime.Now;
+                    baseEntity.ModifiedUserId = currentUserId;
                     break;
                 case EntityState.Deleted:
-                    ((BaseEntity)e.Entity).DeletedDate = DateTime.Now;
-                    ((BaseEntity)e.Entity).DeletedUserId = currentUserId;
+                    baseEntity.DeletedDate = DateTime.Now;
+                    baseEntity.DeletedUserId = currentUserId;
                     break;
             }
         });
