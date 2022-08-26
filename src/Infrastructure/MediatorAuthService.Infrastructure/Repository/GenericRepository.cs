@@ -1,9 +1,9 @@
 ﻿using MediatorAuthService.Domain.Core.Base.Abstract;
 using MediatorAuthService.Domain.Core.Base.Concrete;
 using MediatorAuthService.Domain.Core.Pagination;
+using MediatorAuthService.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
-using MediatorAuthService.Infrastructure.Extensions;
 
 namespace MediatorAuthService.Infrastructure.Repository;
 
@@ -60,13 +60,15 @@ public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEnt
         _dbSet.Remove(entity);
     }
 
-    public async Task<TEntity> UpdateAsync(TEntity entity)
+    public TEntity Update(TEntity entity)
     {
-        var dbEntity = await _dbSet.FindAsync(entity.Id);
-
-        if(dbEntity is not null)
-            _context.Entry(entity).State = EntityState.Modified;
+        _context.Entry(entity).State = EntityState.Modified;
 
         return entity;
+    }
+
+    public async Task<bool> AnyAsync(Expression<Func<TEntity, bool>> predicate)
+    {
+        return await _dbSet.AnyAsync(predicate);
     }
 }

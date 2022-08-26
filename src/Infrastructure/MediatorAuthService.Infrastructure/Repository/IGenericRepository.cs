@@ -12,9 +12,11 @@ public interface IGenericRepository<TEntity> where TEntity : IEntity
 
     IQueryable<TEntity> Where(Expression<Func<TEntity, bool>> predicate);
 
+    Task<bool> AnyAsync(Expression<Func<TEntity, bool>> predicate);
+
     Task AddAsync(TEntity entity);
 
     void Remove(TEntity entity);
 
-    Task<TEntity> UpdateAsync(TEntity entity);
+    TEntity Update(TEntity entity);
 }

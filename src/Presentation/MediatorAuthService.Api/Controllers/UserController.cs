@@ -1,4 +1,5 @@
 ﻿using MediatorAuthService.Api.Controllers.Base;
+using MediatorAuthService.Application.Cqrs.Commands.UserCommands;
 using MediatorAuthService.Application.Cqrs.Queries.UserQueries;
 using MediatorAuthService.Domain.Core.Pagination;
 using MediatorAuthService.Domain.Entities;
@@ -38,6 +39,22 @@ namespace MediatorAuthService.Api.Controllers
         public async Task<IActionResult> GetUserByEmail(string email)
         {
             var response = await _mediator.Send(new GetUserByEmailQuery(email));
+
+            return ActionResultInstance<User>(response);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AddUser(User user)
+        {
+            var response = await _mediator.Send(new CreateUserCommand(user));
+
+            return ActionResultInstance<User>(response);
+        }
+
+        [HttpPut]
+        public async Task<IActionResult> UpdateUser(User user)
+        {
+            var response = await _mediator.Send(new UpdateUserCommand(user));
 
             return ActionResultInstance<User>(response);
         }
