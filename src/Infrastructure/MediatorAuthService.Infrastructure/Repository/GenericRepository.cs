@@ -60,11 +60,9 @@ public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEnt
         _dbSet.Remove(entity);
     }
 
-    public TEntity Update(TEntity entity)
+    public void Update(TEntity entity)
     {
         _context.Entry(entity).State = EntityState.Modified;
-
-        return entity;
     }
 
     public async Task<bool> AnyAsync(Expression<Func<TEntity, bool>> predicate)

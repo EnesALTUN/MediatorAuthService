@@ -1,10 +1,10 @@
-﻿using MediatorAuthService.Application.Wrappers;
-using MediatorAuthService.Domain.Entities;
+﻿using MediatorAuthService.Application.Dtos.UserDtos;
+using MediatorAuthService.Application.Wrappers;
 using MediatR;
 
 namespace MediatorAuthService.Application.Cqrs.Queries.UserQueries;
 
-public class GetUserByEmailQuery : IRequest<ApiResponse<User>>
+public class GetUserByEmailQuery : IRequest<ApiResponse<UserDto>>
 {
     public string Email { get; private set; }
 

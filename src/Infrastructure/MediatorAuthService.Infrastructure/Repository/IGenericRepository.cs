@@ -18,5 +18,5 @@ public interface IGenericRepository<TEntity> where TEntity : IEntity
 
     void Remove(TEntity entity);
 
-    TEntity Update(TEntity entity);
+    void Update(TEntity entity);
 }
