@@ -1,4 +1,5 @@
-﻿using AutoMapper;
+﻿using FluentValidation;
+using MediatorAuthService.Application.PipelineBehaviours;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
@@ -14,6 +15,10 @@ public static class DependencyInjection
         services.AddMediatR(assembly);
 
         services.AddAutoMapper(assembly);
+
+        services.AddValidatorsFromAssembly(assembly);
+
+        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehaviour<,>));
 
         return services;
     }

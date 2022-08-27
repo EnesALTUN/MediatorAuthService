@@ -60,7 +60,7 @@ namespace MediatorAuthService.Api.Controllers
             return ActionResultInstance<UserDto>(response);
         }
 
-        [HttpDelete]
+        [HttpDelete("{id:Guid}")]
         public async Task<IActionResult> DeleteUser(Guid id)
         {
             var response = await _mediator.Send(new DeleteUserCommand(id));

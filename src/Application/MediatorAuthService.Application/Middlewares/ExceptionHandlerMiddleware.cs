@@ -1,4 +1,5 @@
-﻿using MediatorAuthService.Application.Wrappers;
+﻿using FluentValidation;
+using MediatorAuthService.Application.Wrappers;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System.Net;
@@ -22,6 +23,23 @@ public class ExceptionHandlerMiddleware
         try
         {
             await _next.Invoke(httpContext);
+        }
+        catch (ValidationException ex)
+        {
+            _logger.LogError(ex.Message);
+
+            var response = httpContext.Response;
+            response.ContentType = "application/json";
+            response.StatusCode = (int)HttpStatusCode.BadRequest;
+
+            var result = JsonSerializer.Serialize(new ApiResponse<string>()
+            {
+                Errors = ex.Errors.Select(x => x.ToString()).ToList(),
+                IsSuccessful = false,
+                StatusCode = (int)HttpStatusCode.BadRequest
+            }, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+
+            await response.WriteAsync(result);
         }
         catch (Exception ex)
         {

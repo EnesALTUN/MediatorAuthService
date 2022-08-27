@@ -32,6 +32,9 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, ApiRe
                 StatusCode = (int)HttpStatusCode.NotFound,
             };
 
+        if(string.IsNullOrEmpty(request.Password))
+            request.Password = existUser.Password;
+
         var mappedUser = _mapper.Map(request, existUser);
 
         _unitOfWork.GetRepository<User>().Update(mappedUser);
