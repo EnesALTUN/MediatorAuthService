@@ -1,6 +1,7 @@
 ﻿using MediatorAuthService.Api.Controllers.Base;
 using MediatorAuthService.Application.Cqrs.Commands.UserCommands;
 using MediatorAuthService.Application.Cqrs.Queries.UserQueries;
+using MediatorAuthService.Application.Dtos.ResponseDtos;
 using MediatorAuthService.Application.Dtos.UserDtos;
 using MediatorAuthService.Domain.Core.Pagination;
 using MediatR;
@@ -57,6 +58,14 @@ namespace MediatorAuthService.Api.Controllers
             var response = await _mediator.Send(user);
 
             return ActionResultInstance<UserDto>(response);
+        }
+
+        [HttpDelete]
+        public async Task<IActionResult> DeleteUser(Guid id)
+        {
+            var response = await _mediator.Send(new DeleteUserCommand(id));
+
+            return ActionResultInstance<NoDataDto>(response);
         }
     }
 }

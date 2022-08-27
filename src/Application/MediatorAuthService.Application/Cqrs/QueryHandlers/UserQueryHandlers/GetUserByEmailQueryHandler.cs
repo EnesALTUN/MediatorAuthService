@@ -40,7 +40,7 @@ public class GetUserByEmailQueryHandler : IRequestHandler<GetUserByEmailQuery, A
         if (data is null)
             return new ApiResponse<UserDto>
             {
-                Errors = new() { "Kullanıcı Bulunamadı" },
+                Errors = new() { "User is not found." },
                 IsSuccessful = false,
                 StatusCode = (int)HttpStatusCode.NotFound,
             };

@@ -23,11 +23,19 @@ public class GetUserByIdQueryHandler : IRequestHandler<GetUserByIdQuery, ApiResp
 
     public async Task<ApiResponse<UserDto>> Handle(GetUserByIdQuery request, CancellationToken cancellationToken)
     {
-        var userEntity = await _unitOfWork.GetRepository<User>().GetByIdAsync(request.Id);
+        var existEntity = await _unitOfWork.GetRepository<User>().GetByIdAsync(request.Id);
+
+        if (existEntity is null)
+            return new ApiResponse<UserDto>
+            {
+                Errors = new List<string> { "User is not found." },
+                IsSuccessful = false,
+                StatusCode = (int)HttpStatusCode.NotFound
+            };
 
         return new ApiResponse<UserDto>
         {
-            Data = _mapper.Map<UserDto>(userEntity),
+            Data = _mapper.Map<UserDto>(existEntity),
             StatusCode = (int)HttpStatusCode.OK,
             IsSuccessful = true,
         };
