@@ -24,7 +24,18 @@ public class GetUserByEmailQueryHandler : IRequestHandler<GetUserByEmailQuery, A
 
     public async Task<ApiResponse<UserDto>> Handle(GetUserByEmailQuery request, CancellationToken cancellationToken)
     {
-        var data = await _unitOfWork.GetRepository<User>().Where(x => x.Email.Equals(request.Email)).SingleOrDefaultAsync(cancellationToken);
+        var data = await _unitOfWork.GetRepository<User>()
+            .Where(x => x.Email.Equals(request.Email))
+            .Select(x =>
+                new UserDto
+                {
+                    Id = x.Id,
+                    Email = x.Email,
+                    Name = x.Name,
+                    Surname = x.Surname,
+                    IsActive = x.IsActive,
+                })
+            .SingleOrDefaultAsync(cancellationToken);
 
         if (data is null)
             return new ApiResponse<UserDto>
