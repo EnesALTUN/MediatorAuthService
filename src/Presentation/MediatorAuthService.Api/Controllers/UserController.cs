@@ -1,8 +1,8 @@
 ﻿using MediatorAuthService.Api.Controllers.Base;
 using MediatorAuthService.Application.Cqrs.Commands.UserCommands;
 using MediatorAuthService.Application.Cqrs.Queries.UserQueries;
+using MediatorAuthService.Application.Dtos.UserDtos;
 using MediatorAuthService.Domain.Core.Pagination;
-using MediatorAuthService.Domain.Entities;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -24,7 +24,7 @@ namespace MediatorAuthService.Api.Controllers
         {
             var response = await _mediator.Send(new GetUserByIdQuery(id));
 
-            return ActionResultInstance<User>(response);
+            return ActionResultInstance<UserDto>(response);
         }
 
         [HttpGet]
@@ -32,7 +32,7 @@ namespace MediatorAuthService.Api.Controllers
         {
             var response = await _mediator.Send(new GetUserAllQuery(paginationParams));
 
-            return ActionResultInstance<List<User>>(response);
+            return ActionResultInstance<List<UserDto>>(response);
         }
 
         [HttpGet("{email}")]
@@ -40,23 +40,23 @@ namespace MediatorAuthService.Api.Controllers
         {
             var response = await _mediator.Send(new GetUserByEmailQuery(email));
 
-            return ActionResultInstance<User>(response);
+            return ActionResultInstance<UserDto>(response);
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddUser(User user)
+        public async Task<IActionResult> AddUser(CreateUserCommand user)
         {
-            var response = await _mediator.Send(new CreateUserCommand(user));
+            var response = await _mediator.Send(user);
 
-            return ActionResultInstance<User>(response);
+            return ActionResultInstance<UserDto>(response);
         }
 
         [HttpPut]
-        public async Task<IActionResult> UpdateUser(User user)
+        public async Task<IActionResult> UpdateUser(UpdateUserCommand user)
         {
-            var response = await _mediator.Send(new UpdateUserCommand(user));
+            var response = await _mediator.Send(user);
 
-            return ActionResultInstance<User>(response);
+            return ActionResultInstance<UserDto>(response);
         }
     }
 }

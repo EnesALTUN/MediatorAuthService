@@ -1,15 +1,16 @@
-﻿using MediatorAuthService.Application.Wrappers;
-using MediatorAuthService.Domain.Entities;
+﻿using MediatorAuthService.Application.Dtos.UserDtos;
+using MediatorAuthService.Application.Wrappers;
 using MediatR;
 
 namespace MediatorAuthService.Application.Cqrs.Commands.UserCommands;
 
-public class CreateUserCommand : IRequest<ApiResponse<User>>
+public class CreateUserCommand : IRequest<ApiResponse<UserDto>>
 {
-    public User User { get; set; }
+    public string Name { get; set; }
 
-    public CreateUserCommand(User user)
-    {
-        User = user;
-    }
+    public string Surname { get; set; }
+
+    public string Email { get; set; }
+
+    public string Password { get; set; }
 }

@@ -1,10 +1,10 @@
-﻿using MediatorAuthService.Application.Wrappers;
-using MediatorAuthService.Domain.Entities;
+﻿using MediatorAuthService.Application.Dtos.UserDtos;
+using MediatorAuthService.Application.Wrappers;
 using MediatR;
 
 namespace MediatorAuthService.Application.Cqrs.Queries.UserQueries;
 
-public class GetUserByIdQuery : IRequest<ApiResponse<User>>
+public class GetUserByIdQuery : IRequest<ApiResponse<UserDto>>
 {
     public Guid Id { get; private set; }
 
