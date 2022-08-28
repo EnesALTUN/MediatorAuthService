@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using MediatorAuthService.Application.Cqrs.Commands.UserCommands;
 using MediatorAuthService.Application.Dtos.UserDtos;
+using MediatorAuthService.Application.Extensions;
 using MediatorAuthService.Application.Wrappers;
 using MediatorAuthService.Domain.Entities;
 using MediatorAuthService.Infrastructure.UnitOfWork;
@@ -31,6 +32,8 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, ApiRe
                 IsSuccessful = false,
                 StatusCode = (int)HttpStatusCode.BadRequest
             };
+
+        request.Password = HashingManager.HashPassword(request.Password);
 
         var userEntity = _mapper.Map<User>(request);
 
