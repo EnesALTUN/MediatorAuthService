@@ -32,9 +32,13 @@ public class ExceptionHandlerMiddleware
             response.ContentType = "application/json";
             response.StatusCode = (int)HttpStatusCode.BadRequest;
 
+            List<string> errors = ex.Errors.Any()
+                ? ex.Errors.Select(x => x.ToString()).ToList()
+                : new List<string> { ex.Message };
+
             var result = JsonSerializer.Serialize(new ApiResponse<string>()
             {
-                Errors = ex.Errors.Select(x => x.ToString()).ToList(),
+                Errors =  errors,
                 IsSuccessful = false,
                 StatusCode = (int)HttpStatusCode.BadRequest
             }, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });

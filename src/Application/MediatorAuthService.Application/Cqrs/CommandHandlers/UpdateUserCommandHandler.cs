@@ -1,6 +1,8 @@
 ﻿using AutoMapper;
+using FluentValidation;
 using MediatorAuthService.Application.Cqrs.Commands.UserCommands;
 using MediatorAuthService.Application.Dtos.UserDtos;
+using MediatorAuthService.Application.Extensions;
 using MediatorAuthService.Application.Wrappers;
 using MediatorAuthService.Domain.Entities;
 using MediatorAuthService.Infrastructure.UnitOfWork;
@@ -32,8 +34,11 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, ApiRe
                 StatusCode = (int)HttpStatusCode.NotFound,
             };
 
-        if(string.IsNullOrEmpty(request.Password))
-            request.Password = existUser.Password;
+        request.Password = string.IsNullOrEmpty(request.OldPassword) || string.IsNullOrEmpty(request.Password)
+            ? existUser.Password
+            : HashingManager.VerifyHashedPassword(existUser.Password, request.OldPassword)
+                ? HashingManager.HashPassword(request.Password)
+                : throw new ValidationException("Your password does not match.");
 
         var mappedUser = _mapper.Map(request, existUser);
 
