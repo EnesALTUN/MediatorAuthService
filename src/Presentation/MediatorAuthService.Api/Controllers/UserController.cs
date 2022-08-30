@@ -5,12 +5,14 @@ using MediatorAuthService.Application.Dtos.ResponseDtos;
 using MediatorAuthService.Application.Dtos.UserDtos;
 using MediatorAuthService.Domain.Core.Pagination;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MediatorAuthService.Api.Controllers
 {
-    [Route("api/[controller]")]
+    [Authorize]
     [ApiController]
+    [Route("api/[controller]")]
     public class UserController : MediatorBaseController
     {
         private readonly IMediator _mediator;
