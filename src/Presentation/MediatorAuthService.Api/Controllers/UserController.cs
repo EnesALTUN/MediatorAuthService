@@ -69,5 +69,13 @@ namespace MediatorAuthService.Api.Controllers
 
             return ActionResultInstance<NoDataDto>(response);
         }
+
+        [HttpPost("change-password")]
+        public async Task<IActionResult> ChangePassword(ChangePasswordUserCommand request)
+        {
+            var response = await _mediator.Send(request);
+
+            return ActionResultInstance<NoDataDto>(response);
+        }
     }
 }
