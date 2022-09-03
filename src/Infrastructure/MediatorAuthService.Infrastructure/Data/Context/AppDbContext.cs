@@ -2,6 +2,7 @@
 using MediatorAuthService.Domain.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace MediatorAuthService.Infrastructure.Data.Context;
 
@@ -21,10 +22,7 @@ public class AppDbContext : DbContext
 
     public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
     {
-        // It will be unlocked when the JWT Token is activated.
-        //Guid userId = Guid.Parse(_httpContextAccessor.HttpContext.User.FindFirst(x => x.Type == ClaimTypes.NameIdentifier)?.Value ?? "");
-
-        Guid currentUserId = Guid.NewGuid();
+        Guid currentUserId = Guid.Parse(_httpContextAccessor.HttpContext.User.FindFirst(x => x.Type == ClaimTypes.NameIdentifier)?.Value ?? "");
 
         ChangeTracker.Entries().ToList().ForEach(e =>
         {
