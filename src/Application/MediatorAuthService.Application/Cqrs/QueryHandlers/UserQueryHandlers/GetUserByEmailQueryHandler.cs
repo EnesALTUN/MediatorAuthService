@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using AutoMapper.QueryableExtensions;
 using MediatorAuthService.Application.Cqrs.Queries.UserQueries;
 using MediatorAuthService.Application.Dtos.UserDtos;
 using MediatorAuthService.Application.Wrappers;
@@ -26,15 +27,7 @@ public class GetUserByEmailQueryHandler : IRequestHandler<GetUserByEmailQuery, A
     {
         var data = await _unitOfWork.GetRepository<User>()
             .Where(x => x.Email.Equals(request.Email))
-            .Select(x =>
-                new UserDto
-                {
-                    Id = x.Id,
-                    Email = x.Email,
-                    Name = x.Name,
-                    Surname = x.Surname,
-                    IsActive = x.IsActive,
-                })
+            .ProjectTo<UserDto>(_mapper.ConfigurationProvider)
             .SingleOrDefaultAsync(cancellationToken);
 
         if (data is null)

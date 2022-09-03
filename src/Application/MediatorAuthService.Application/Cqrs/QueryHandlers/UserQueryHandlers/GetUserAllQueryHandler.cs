@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using AutoMapper.QueryableExtensions;
 using MediatorAuthService.Application.Cqrs.Queries.UserQueries;
 using MediatorAuthService.Application.Dtos.UserDtos;
 using MediatorAuthService.Application.Wrappers;
@@ -26,15 +27,9 @@ public class GetUserAllQueryHandler : IRequestHandler<GetUserAllQuery, ApiRespon
     {
         var resRepo = _unitOfWork.GetRepository<User>().GetAll(request.PaginationParams);
 
-        var data = await resRepo.Item1.Select(x =>
-            new UserDto
-            {
-                Id = x.Id,
-                Email = x.Email,
-                Name = x.Name,
-                Surname = x.Surname,
-                IsActive = x.IsActive,
-            }).ToListAsync(cancellationToken);
+        var data = await resRepo.Item1
+            .ProjectTo<UserDto>(_mapper.ConfigurationProvider)
+            .ToListAsync(cancellationToken);
 
         return new ApiResponse<List<UserDto>>
         {
