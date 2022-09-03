@@ -24,6 +24,7 @@ internal class GenerateTokenQueryHandler : IRequestHandler<GenerateTokenQuery, A
     public Task<ApiResponse<TokenDto>> Handle(GenerateTokenQuery request, CancellationToken cancellationToken)
     {
         DateTime accessTokenExpiration = DateTime.Now.AddDays(_tokenOption.AccessTokenExpiration);
+        DateTime refreshTokenExpiration = DateTime.Now.AddDays(_tokenOption.RefreshTokenExpiration);
 
         var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_tokenOption.SecurityKey));
 
@@ -41,7 +42,9 @@ internal class GenerateTokenQueryHandler : IRequestHandler<GenerateTokenQuery, A
         var tokenDto = new TokenDto
         {
             AccessToken = token,
-            AccessTokenExpire = accessTokenExpiration
+            RefreshToken = HashingManager.HashValue(Guid.NewGuid().ToString()),
+            AccessTokenExpire = accessTokenExpiration,
+            RefreshTokenExpire = refreshTokenExpiration
         };
 
         return Task.FromResult(

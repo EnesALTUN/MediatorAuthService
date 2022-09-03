@@ -1,6 +1,7 @@
-using MediatorAuthService.Application;
+﻿using MediatorAuthService.Application;
 using MediatorAuthService.Application.Middlewares;
 using MediatorAuthService.Infrastructure;
+using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,6 +11,10 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddApplication(builder.Configuration);
 builder.Services.AddInfrastructure(builder.Configuration);
+
+builder.Services.Configure<ApiBehaviorOptions>(options => {
+    options.SuppressModelStateInvalidFilter = true;
+});
 
 var app = builder.Build();
 

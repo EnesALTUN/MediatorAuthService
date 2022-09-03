@@ -9,7 +9,7 @@ using MediatorAuthService.Infrastructure.UnitOfWork;
 using MediatR;
 using System.Net;
 
-namespace MediatorAuthService.Application.Cqrs.CommandHandlers;
+namespace MediatorAuthService.Application.Cqrs.CommandHandlers.UserComandHandlers;
 
 public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, ApiResponse<UserDto>>
 {
@@ -36,8 +36,8 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, ApiRe
 
         request.Password = string.IsNullOrEmpty(request.OldPassword) || string.IsNullOrEmpty(request.Password)
             ? existUser.Password
-            : HashingManager.VerifyHashedPassword(existUser.Password, request.OldPassword)
-                ? HashingManager.HashPassword(request.Password)
+            : HashingManager.VerifyHashedValue(existUser.Password, request.OldPassword)
+                ? HashingManager.HashValue(request.Password)
                 : throw new ValidationException("Your password does not match.");
 
         var mappedUser = _mapper.Map(request, existUser);

@@ -4,14 +4,14 @@ namespace MediatorAuthService.Application.Extensions;
 
 public static class HashingManager
 {
-    public static string HashPassword(string password)
+    public static string HashValue(string value)
     {
         byte[] salt;
         byte[] buffer2;
-        if (password is null)
-            throw new ArgumentNullException(nameof(password));
+        if (value is null)
+            throw new ArgumentNullException(nameof(value));
 
-        using (Rfc2898DeriveBytes bytes = new(password, 0x10, 0x3e8))
+        using (Rfc2898DeriveBytes bytes = new(value, 0x10, 0x3e8))
         {
             salt = bytes.Salt;
             buffer2 = bytes.GetBytes(0x20);
@@ -22,15 +22,15 @@ public static class HashingManager
         return Convert.ToBase64String(dst);
     }
 
-    public static bool VerifyHashedPassword(string hashedPassword, string password)
+    public static bool VerifyHashedValue(string hashedValue, string value)
     {
         byte[] buffer4;
-        if (hashedPassword is null) return false;
+        if (hashedValue is null) return false;
 
-        if (password is null)
-            throw new ArgumentNullException(nameof(password));
+        if (value is null)
+            throw new ArgumentNullException(nameof(value));
 
-        byte[] src = Convert.FromBase64String(hashedPassword);
+        byte[] src = Convert.FromBase64String(hashedValue);
 
         if ((src.Length != 0x31) || (src[0] != 0)) return false;
 
@@ -38,7 +38,7 @@ public static class HashingManager
         Buffer.BlockCopy(src, 1, dst, 0, 0x10);
         byte[] buffer3 = new byte[0x20];
         Buffer.BlockCopy(src, 0x11, buffer3, 0, 0x20);
-        using (Rfc2898DeriveBytes bytes = new(password, dst, 0x3e8))
+        using (Rfc2898DeriveBytes bytes = new(value, dst, 0x3e8))
         {
             buffer4 = bytes.GetBytes(0x20);
         }

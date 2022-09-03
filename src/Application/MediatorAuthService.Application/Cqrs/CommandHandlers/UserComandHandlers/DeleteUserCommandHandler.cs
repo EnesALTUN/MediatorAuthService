@@ -6,7 +6,7 @@ using MediatorAuthService.Infrastructure.UnitOfWork;
 using MediatR;
 using System.Net;
 
-namespace MediatorAuthService.Application.Cqrs.CommandHandlers;
+namespace MediatorAuthService.Application.Cqrs.CommandHandlers.UserComandHandlers;
 
 public class DeleteUserCommandHandler : IRequestHandler<DeleteUserCommand, ApiResponse<NoDataDto>>
 {
