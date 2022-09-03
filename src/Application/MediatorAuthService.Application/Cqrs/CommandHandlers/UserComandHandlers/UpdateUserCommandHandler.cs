@@ -7,7 +7,9 @@ using MediatorAuthService.Application.Wrappers;
 using MediatorAuthService.Domain.Entities;
 using MediatorAuthService.Infrastructure.UnitOfWork;
 using MediatR;
+using Microsoft.AspNetCore.Http;
 using System.Net;
+using System.Security.Claims;
 
 namespace MediatorAuthService.Application.Cqrs.CommandHandlers.UserComandHandlers;
 
@@ -15,15 +17,18 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, ApiRe
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public UpdateUserCommandHandler(IUnitOfWork unitOfWork, IMapper mapper)
+    public UpdateUserCommandHandler(IUnitOfWork unitOfWork, IMapper mapper, IHttpContextAccessor httpContextAccessor)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
+        _httpContextAccessor = httpContextAccessor;
     }
 
     public async Task<ApiResponse<UserDto>> Handle(UpdateUserCommand request, CancellationToken cancellationToken)
     {
+
         var existUser = await _unitOfWork.GetRepository<User>().GetByIdAsync(request.Id);
 
         if (existUser is null)
@@ -33,6 +38,9 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, ApiRe
                 IsSuccessful = false,
                 StatusCode = (int)HttpStatusCode.NotFound,
             };
+
+        if (!await ExistingEMailControlInEMailExchange(existUser.Email, request.Email))
+            throw new ValidationException("The entered e-mail address is used.");
 
         request.Password = string.IsNullOrEmpty(request.OldPassword) || string.IsNullOrEmpty(request.Password)
             ? existUser.Password
@@ -52,5 +60,13 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, ApiRe
             StatusCode = (int)HttpStatusCode.OK,
             TotalItemCount = 1
         };
+    }
+    
+    private async Task<bool> ExistingEMailControlInEMailExchange(string oldEmail, string newEmail)
+    {
+        if (oldEmail.Equals(newEmail))
+            return true;
+
+        return !await _unitOfWork.GetRepository<User>().AnyAsync(user => user.Email.Equals(newEmail));
     }
 }
