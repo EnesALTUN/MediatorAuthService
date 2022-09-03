@@ -32,7 +32,10 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, ApiRe
                 Errors = new List<string> { "User is not found." },
                 IsSuccessful = false,
                 StatusCode = (int)HttpStatusCode.NotFound,
-            };
+            }; 
+        
+        if (!await ExistingEMailControlInEMailExchange(existUser.Email, request.Email))
+            throw new ValidationException("The entered e-mail address is used.");
 
         request.Password = string.IsNullOrEmpty(request.OldPassword) || string.IsNullOrEmpty(request.Password)
             ? existUser.Password
@@ -52,5 +55,13 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, ApiRe
             StatusCode = (int)HttpStatusCode.OK,
             TotalItemCount = 1
         };
+    }
+
+    private async Task<bool> ExistingEMailControlInEMailExchange(string oldEmail, string newEmail)
+    {
+        if (oldEmail.Equals(newEmail))
+            return true;
+
+        return !await _unitOfWork.GetRepository<User>().AnyAsync(user => user.Email.Equals(newEmail));
     }
 }
