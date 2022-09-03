@@ -1,18 +1,17 @@
 ﻿using MediatorAuthService.Api.Controllers.Base;
 using MediatorAuthService.Application.Cqrs.Commands.UserCommands;
 using MediatorAuthService.Application.Cqrs.Queries.UserQueries;
-using MediatorAuthService.Application.Dtos.ResponseDtos;
-using MediatorAuthService.Application.Dtos.UserDtos;
 using MediatorAuthService.Domain.Core.Pagination;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace MediatorAuthService.Api.Controllers
+namespace MediatorAuthService.Api.Controllers.V1
 {
     [Authorize]
     [ApiController]
-    [Route("api/[controller]")]
+    [ApiVersion("1.0")]
+    [Route("api/v{version:apiVersion}/[controller]")]
     public class UserController : MediatorBaseController
     {
         private readonly IMediator _mediator;
@@ -27,7 +26,7 @@ namespace MediatorAuthService.Api.Controllers
         {
             var response = await _mediator.Send(new GetUserByIdQuery(id));
 
-            return ActionResultInstance<UserDto>(response);
+            return ActionResultInstance(response);
         }
 
         [HttpGet]
@@ -35,7 +34,7 @@ namespace MediatorAuthService.Api.Controllers
         {
             var response = await _mediator.Send(new GetUserAllQuery(paginationParams));
 
-            return ActionResultInstance<List<UserDto>>(response);
+            return ActionResultInstance(response);
         }
 
         [HttpGet("{email}")]
@@ -43,7 +42,7 @@ namespace MediatorAuthService.Api.Controllers
         {
             var response = await _mediator.Send(new GetUserByEmailQuery(email));
 
-            return ActionResultInstance<UserDto>(response);
+            return ActionResultInstance(response);
         }
 
         [HttpPost]
@@ -51,7 +50,7 @@ namespace MediatorAuthService.Api.Controllers
         {
             var response = await _mediator.Send(user);
 
-            return ActionResultInstance<UserDto>(response);
+            return ActionResultInstance(response);
         }
 
         [HttpPut]
@@ -59,7 +58,7 @@ namespace MediatorAuthService.Api.Controllers
         {
             var response = await _mediator.Send(user);
 
-            return ActionResultInstance<UserDto>(response);
+            return ActionResultInstance(response);
         }
 
         [HttpDelete("{id:Guid}")]
@@ -67,7 +66,7 @@ namespace MediatorAuthService.Api.Controllers
         {
             var response = await _mediator.Send(new DeleteUserCommand(id));
 
-            return ActionResultInstance<NoDataDto>(response);
+            return ActionResultInstance(response);
         }
 
         [HttpPost("change-password")]
@@ -75,7 +74,7 @@ namespace MediatorAuthService.Api.Controllers
         {
             var response = await _mediator.Send(request);
 
-            return ActionResultInstance<NoDataDto>(response);
+            return ActionResultInstance(response);
         }
     }
 }
