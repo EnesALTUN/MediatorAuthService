@@ -8,7 +8,7 @@ using MediatorAuthService.Infrastructure.UnitOfWork;
 using MediatR;
 using System.Net;
 
-namespace MediatorAuthService.Application.Cqrs.CommandHandlers;
+namespace MediatorAuthService.Application.Cqrs.CommandHandlers.UserComandHandlers;
 
 public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, ApiResponse<UserDto>>
 {
@@ -33,9 +33,11 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, ApiRe
                 StatusCode = (int)HttpStatusCode.BadRequest
             };
 
-        request.Password = HashingManager.HashPassword(request.Password);
+        request.Password = HashingManager.HashValue(request.Password);
 
         var userEntity = _mapper.Map<User>(request);
+
+        userEntity.RefreshToken = HashingManager.HashValue(Guid.NewGuid().ToString());
 
         await _unitOfWork.GetRepository<User>().AddAsync(userEntity);
         await _unitOfWork.SaveChangesAsync();

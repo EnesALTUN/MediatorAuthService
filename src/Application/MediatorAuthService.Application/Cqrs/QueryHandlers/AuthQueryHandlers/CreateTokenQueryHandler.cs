@@ -47,7 +47,7 @@ public class CreateTokenQueryHandler : IRequestHandler<CreateTokenQuery, ApiResp
                 StatusCode = (int)HttpStatusCode.NotFound
             };
 
-        if (!HashingManager.VerifyHashedPassword(existUser.Password, request.Password))
+        if (!HashingManager.VerifyHashedValue(existUser.Password, request.Password))
             return new ApiResponse<TokenDto>
             {
                 Errors = new List<string> { "User is not found." },
