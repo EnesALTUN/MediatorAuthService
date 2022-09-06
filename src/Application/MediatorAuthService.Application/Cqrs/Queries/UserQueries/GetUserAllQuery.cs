@@ -1,17 +1,17 @@
 ﻿using MediatorAuthService.Application.Dtos.UserDtos;
 using MediatorAuthService.Application.Wrappers;
 using MediatorAuthService.Domain.Core.Pagination;
-using MediatorAuthService.Domain.Entities;
 using MediatR;
 
 namespace MediatorAuthService.Application.Cqrs.Queries.UserQueries;
 
-public class GetUserAllQuery : IRequest<ApiResponse<List<UserDto>>>
+public class GetUserAllQuery : PaginationParams, IRequest<ApiResponse<List<UserDto>>>
 {
-    public PaginationParams PaginationParams { get; set; }
+    public string? Name { get; set; }
 
-    public GetUserAllQuery(PaginationParams request)
-    {
-        PaginationParams = request;
-    }
+    public string? Surname { get; set; }
+
+    public string? Email { get; set; }
+
+    public bool? IsActive { get; set; }
 }
