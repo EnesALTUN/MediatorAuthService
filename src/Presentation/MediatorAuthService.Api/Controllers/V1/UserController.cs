@@ -30,9 +30,9 @@ namespace MediatorAuthService.Api.Controllers.V1
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllUser([FromQuery] PaginationParams paginationParams)
+        public async Task<IActionResult> GetAllUser([FromQuery] GetUserAllQuery request)
         {
-            var response = await _mediator.Send(new GetUserAllQuery(paginationParams));
+            var response = await _mediator.Send(request);
 
             return ActionResultInstance(response);
         }
