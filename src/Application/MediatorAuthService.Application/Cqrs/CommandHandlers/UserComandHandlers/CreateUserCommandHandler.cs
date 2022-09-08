@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using MediatorAuthService.Application.Cqrs.Commands.UserCommands;
 using MediatorAuthService.Application.Dtos.UserDtos;
+using MediatorAuthService.Application.Exceptions;
 using MediatorAuthService.Application.Extensions;
 using MediatorAuthService.Application.Wrappers;
 using MediatorAuthService.Domain.Entities;
@@ -26,12 +27,7 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, ApiRe
         bool isExistUserByEmail = await _unitOfWork.GetRepository<User>().AnyAsync(x => x.Email.Equals(request.Email));
 
         if (isExistUserByEmail)
-            return new ApiResponse<UserDto>
-            {
-                Errors = new List<string> { "There is a record of the e-mail address." },
-                IsSuccessful = false,
-                StatusCode = (int)HttpStatusCode.BadRequest
-            };
+            throw new BusinessException("There is a record of the e-mail address.");
 
         request.Password = HashingManager.HashValue(request.Password);
 

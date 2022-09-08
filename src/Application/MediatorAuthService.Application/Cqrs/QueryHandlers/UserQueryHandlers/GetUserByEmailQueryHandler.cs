@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using AutoMapper.QueryableExtensions;
+using FluentValidation;
 using MediatorAuthService.Application.Cqrs.Queries.UserQueries;
 using MediatorAuthService.Application.Dtos.UserDtos;
 using MediatorAuthService.Application.Wrappers;
@@ -31,12 +32,7 @@ public class GetUserByEmailQueryHandler : IRequestHandler<GetUserByEmailQuery, A
             .SingleOrDefaultAsync(cancellationToken);
 
         if (data is null)
-            return new ApiResponse<UserDto>
-            {
-                Errors = new() { "User is not found." },
-                IsSuccessful = false,
-                StatusCode = (int)HttpStatusCode.NotFound,
-            };
+            throw new ValidationException("User is not found.");
 
         return new ApiResponse<UserDto>
         {

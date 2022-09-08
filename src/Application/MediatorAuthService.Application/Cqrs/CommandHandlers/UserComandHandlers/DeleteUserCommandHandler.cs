@@ -1,4 +1,5 @@
-﻿using MediatorAuthService.Application.Cqrs.Commands.UserCommands;
+﻿using FluentValidation;
+using MediatorAuthService.Application.Cqrs.Commands.UserCommands;
 using MediatorAuthService.Application.Dtos.ResponseDtos;
 using MediatorAuthService.Application.Wrappers;
 using MediatorAuthService.Domain.Entities;
@@ -22,12 +23,7 @@ public class DeleteUserCommandHandler : IRequestHandler<DeleteUserCommand, ApiRe
         var existUser = await _unitOfWork.GetRepository<User>().GetByIdAsync(request.Id);
 
         if (existUser is null)
-            return new ApiResponse<NoDataDto>
-            {
-                Errors = new List<string> { "User is not found." },
-                IsSuccessful = false,
-                StatusCode = (int)HttpStatusCode.NotFound
-            };
+            throw new ValidationException("User is not found.");
 
         _unitOfWork.GetRepository<User>().Remove(existUser);
         await _unitOfWork.SaveChangesAsync();

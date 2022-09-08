@@ -2,6 +2,7 @@
 using FluentValidation;
 using MediatorAuthService.Application.Cqrs.Commands.UserCommands;
 using MediatorAuthService.Application.Dtos.UserDtos;
+using MediatorAuthService.Application.Exceptions;
 using MediatorAuthService.Application.Extensions;
 using MediatorAuthService.Application.Wrappers;
 using MediatorAuthService.Domain.Entities;
@@ -27,15 +28,10 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, ApiRe
         var existUser = await _unitOfWork.GetRepository<User>().GetByIdAsync(request.Id);
 
         if (existUser is null)
-            return new ApiResponse<UserDto>
-            {
-                Errors = new List<string> { "User is not found." },
-                IsSuccessful = false,
-                StatusCode = (int)HttpStatusCode.NotFound,
-            }; 
+            throw new ValidationException("User is not found.");
         
         if (!await ExistingEMailControlInEMailExchange(existUser.Email, request.Email))
-            throw new ValidationException("The entered e-mail address is used.");
+            throw new BusinessException("The entered e-mail address is used.");
 
         request.Password = string.IsNullOrEmpty(request.OldPassword) || string.IsNullOrEmpty(request.Password)
             ? existUser.Password

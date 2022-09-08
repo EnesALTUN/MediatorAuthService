@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using FluentValidation;
 using MediatorAuthService.Application.Cqrs.Queries.AuthQueries;
 using MediatorAuthService.Application.Dtos.AuthDtos;
 using MediatorAuthService.Application.Dtos.UserDtos;
@@ -32,28 +33,13 @@ public class CreateTokenQueryHandler : IRequestHandler<CreateTokenQuery, ApiResp
             .SingleOrDefaultAsync(cancellationToken);
 
         if (existUser is null)
-            return new ApiResponse<TokenDto>
-            {
-                Errors = new List<string> { "User is not found." },
-                IsSuccessful = false,
-                StatusCode = (int)HttpStatusCode.NotFound
-            };
+            throw new ValidationException("User is not found.");
 
         if (!existUser.IsActive)
-            return new ApiResponse<TokenDto>
-            {
-                Errors = new List<string> { "The user is inactive in the system." },
-                IsSuccessful = false,
-                StatusCode = (int)HttpStatusCode.NotFound
-            };
+            throw new ValidationException("The user is inactive in the system.");
 
         if (!HashingManager.VerifyHashedValue(existUser.Password, request.Password))
-            return new ApiResponse<TokenDto>
-            {
-                Errors = new List<string> { "User is not found." },
-                IsSuccessful = false,
-                StatusCode = (int)HttpStatusCode.NotFound
-            };
+            throw new ValidationException("User is not found.");
 
         var userDto = _mapper.Map<UserDto>(existUser);
 

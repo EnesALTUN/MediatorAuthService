@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using MediatorAuthService.Application.Exceptions;
 using MediatorAuthService.Application.Wrappers;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -38,9 +39,26 @@ public class ExceptionHandlerMiddleware
 
             var result = JsonSerializer.Serialize(new ApiResponse<string>()
             {
-                Errors =  errors,
+                Errors = errors,
                 IsSuccessful = false,
-                StatusCode = (int)HttpStatusCode.BadRequest
+                StatusCode = response.StatusCode
+            }, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+
+            await response.WriteAsync(result);
+        }
+        catch (BusinessException ex)
+        {
+            _logger.LogError(ex.Message);
+
+            var response = httpContext.Response;
+            response.ContentType = "application/json";
+            response.StatusCode = Convert.ToInt16(ex.HttpStatusCode ?? HttpStatusCode.BadRequest);
+
+            var result = JsonSerializer.Serialize(new ApiResponse<string>()
+            {
+                Errors = new List<string> { ex.Message },
+                IsSuccessful = false,
+                StatusCode = response.StatusCode,
             }, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
 
             await response.WriteAsync(result);
@@ -57,7 +75,7 @@ public class ExceptionHandlerMiddleware
             {
                 Errors = new List<string> { ex.Message },
                 IsSuccessful = false,
-                StatusCode = (int)HttpStatusCode.InternalServerError
+                StatusCode = response.StatusCode
             }, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
 
             await response.WriteAsync(result);
