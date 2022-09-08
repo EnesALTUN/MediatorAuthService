@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using FluentValidation;
 using MediatorAuthService.Application.Cqrs.Queries.UserQueries;
 using MediatorAuthService.Application.Dtos.UserDtos;
 using MediatorAuthService.Application.Wrappers;
@@ -26,12 +27,7 @@ public class GetUserByIdQueryHandler : IRequestHandler<GetUserByIdQuery, ApiResp
         var existEntity = await _unitOfWork.GetRepository<User>().GetByIdAsync(request.Id);
 
         if (existEntity is null)
-            return new ApiResponse<UserDto>
-            {
-                Errors = new List<string> { "User is not found." },
-                IsSuccessful = false,
-                StatusCode = (int)HttpStatusCode.NotFound
-            };
+            throw new ValidationException("User is not found.");
 
         return new ApiResponse<UserDto>
         {
