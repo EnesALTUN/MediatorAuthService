@@ -2,6 +2,7 @@
 using MediatorAuthService.Domain.Core.Base.Concrete;
 using MediatorAuthService.Infrastructure.Repository;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace MediatorAuthService.Infrastructure.UnitOfWork;
 
@@ -33,10 +34,19 @@ public class UnitOfWork<TContext> : IUnitOfWork<TContext>, IUnitOfWork where TCo
         return repo;
     }
 
-    public async Task<int> SaveChangesAsync()
+    public async Task<int> SaveChangesAsync() => await Context.SaveChangesAsync();
+
+    public async Task<IDbContextTransaction> BeginTransactionAsync() => await Context.Database.BeginTransactionAsync();
+
+    public async Task CommitAsync(bool isSaveChanges = true)
     {
-        return await Context.SaveChangesAsync();
+        if (isSaveChanges && Context.ChangeTracker.HasChanges())
+            await Context.SaveChangesAsync();
+
+        await Context.Database.CommitTransactionAsync();
     }
+
+    public async Task RollBackAsync() => await Context.Database.RollbackTransactionAsync();
 
     public async ValueTask DisposeAsync()
     {
