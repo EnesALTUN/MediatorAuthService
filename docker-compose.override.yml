@@ -1,0 +1,40 @@
+version: '3.4'
+
+services:
+  mediatorauthservice.api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5216
+      - ConnectionStrings:Default=Data Source=s_sqlserver;Initial Catalog=MeditorAuthService;User Id=sa;Password=MediatorAuthService-SqlServer-MaxLevel(!)Password;Integrated Security=False
+    ports:
+      - "5216:5216"
+    networks:
+      - net_backendservices
+      - sql_db
+    depends_on:
+      - s_sqlserver
+
+  s_sqlserver:
+    user: root
+    ports: 
+      - 1453:1433
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=MediatorAuthService-SqlServer-MaxLevel(!)Password
+    volumes:
+      - mediator_sqlserver_data:/var/opt/mssql/data
+      - mediator_sqlserver_log:/var/opt/mssql/log
+    networks:
+      - sql_db
+
+networks:
+  net_backendservices:
+    driver: bridge
+    external: true
+  sql_db:
+    driver: bridge
+    external: true
+
+volumes:
+  mediator_sqlserver_data:
+  mediator_sqlserver_log:

@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace MediatorAuthService.Infrastructure.Migrations
+namespace MediatorAuthService.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
     partial class AppDbContextModelSnapshot : ModelSnapshot
@@ -75,6 +75,20 @@ namespace MediatorAuthService.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Users");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("d0bfa391-a604-4049-a868-359091461e46"),
+                            CreatedDate = new DateTime(2022, 12, 11, 19, 32, 27, 619, DateTimeKind.Utc).AddTicks(3872),
+                            CreatedUserId = new Guid("d0bfa391-a604-4049-a868-359091461e46"),
+                            Email = "admin@gmail.com",
+                            IsActive = true,
+                            Name = "Admin",
+                            Password = "AJP3f/ZqBr+xHwFkTPBkwVO+BgcrDmRe5l5lgSzKy993YYd01unheSSpwWbeaCyLFg==",
+                            RefreshToken = "ACE4OSv8s/cKB7sTd3dbjDBDGtuF9H1g/padyLEz9HZ2zIvS6wMC97ddpbxUGPb0QQ==",
+                            Surname = "Admin"
+                        });
                 });
 #pragma warning restore 612, 618
         }

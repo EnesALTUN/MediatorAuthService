@@ -2,8 +2,8 @@
 using MediatorAuthService.Application.Cqrs.Commands.UserCommands;
 using MediatorAuthService.Application.Dtos.UserDtos;
 using MediatorAuthService.Application.Exceptions;
-using MediatorAuthService.Application.Extensions;
 using MediatorAuthService.Application.Wrappers;
+using MediatorAuthService.Domain.Core.Extensions;
 using MediatorAuthService.Domain.Entities;
 using MediatorAuthService.Infrastructure.UnitOfWork;
 using MediatR;

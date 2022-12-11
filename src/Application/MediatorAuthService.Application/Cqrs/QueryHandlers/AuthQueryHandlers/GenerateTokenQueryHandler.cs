@@ -3,6 +3,7 @@ using MediatorAuthService.Application.Dtos.AuthDtos;
 using MediatorAuthService.Application.Dtos.ConfigurationDtos;
 using MediatorAuthService.Application.Extensions;
 using MediatorAuthService.Application.Wrappers;
+using MediatorAuthService.Domain.Core.Extensions;
 using MediatR;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
