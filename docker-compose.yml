@@ -1,0 +1,13 @@
+version: '3.4'
+
+services:
+  mediatorauthservice.api:
+    container_name: mediator_authservice
+    image: ${DOCKER_REGISTRY-}mediator/authserviceapi
+    build:
+      context: .
+      dockerfile: src/Presentation/MediatorAuthService.Api/Dockerfile
+
+  s_sqlserver:
+    container_name: mediator_authservice_sqlserver
+    image: mcr.microsoft.com/mssql/server:2019-latest

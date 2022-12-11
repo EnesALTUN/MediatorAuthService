@@ -6,6 +6,10 @@ using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateBuilder(args);
 
+IConfigurationRoot configuration = new ConfigurationBuilder()
+    .AddEnvironmentVariables()
+    .Build();
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGenCustomize();

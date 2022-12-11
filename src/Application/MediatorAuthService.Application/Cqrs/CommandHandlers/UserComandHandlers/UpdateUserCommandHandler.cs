@@ -3,8 +3,8 @@ using FluentValidation;
 using MediatorAuthService.Application.Cqrs.Commands.UserCommands;
 using MediatorAuthService.Application.Dtos.UserDtos;
 using MediatorAuthService.Application.Exceptions;
-using MediatorAuthService.Application.Extensions;
 using MediatorAuthService.Application.Wrappers;
+using MediatorAuthService.Domain.Core.Extensions;
 using MediatorAuthService.Domain.Entities;
 using MediatorAuthService.Infrastructure.UnitOfWork;
 using MediatR;
@@ -29,7 +29,7 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, ApiRe
 
         if (existUser is null)
             throw new ValidationException("User is not found.");
-        
+
         if (!await ExistingEMailControlInEMailExchange(existUser.Email, request.Email))
             throw new BusinessException("The entered e-mail address is used.");
 

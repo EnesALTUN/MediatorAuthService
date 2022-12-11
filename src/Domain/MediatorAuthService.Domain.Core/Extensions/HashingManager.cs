@@ -1,6 +1,6 @@
 ﻿using System.Security.Cryptography;
 
-namespace MediatorAuthService.Application.Extensions;
+namespace MediatorAuthService.Domain.Core.Extensions;
 
 public static class HashingManager
 {

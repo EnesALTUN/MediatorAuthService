@@ -1,8 +1,8 @@
 ﻿using FluentValidation;
 using MediatorAuthService.Application.Cqrs.Commands.UserCommands;
 using MediatorAuthService.Application.Dtos.ResponseDtos;
-using MediatorAuthService.Application.Extensions;
 using MediatorAuthService.Application.Wrappers;
+using MediatorAuthService.Domain.Core.Extensions;
 using MediatorAuthService.Domain.Entities;
 using MediatorAuthService.Infrastructure.UnitOfWork;
 using MediatR;
