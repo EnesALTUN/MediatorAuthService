@@ -69,13 +69,12 @@ public class ExceptionHandlerMiddleware
 
             var response = httpContext.Response;
             response.ContentType = "application/json";
-            response.StatusCode = (int)HttpStatusCode.InternalServerError;
 
             var result = JsonSerializer.Serialize(new ApiResponse<string>()
             {
-                Errors = new List<string> { ex.Message },
+                Errors = new List<string> { "Sorry, you do not have the necessary permissions to take the relevant action." },
                 IsSuccessful = false,
-                StatusCode = response.StatusCode
+                StatusCode = (int)HttpStatusCode.Forbidden
             }, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
 
             await response.WriteAsync(result);

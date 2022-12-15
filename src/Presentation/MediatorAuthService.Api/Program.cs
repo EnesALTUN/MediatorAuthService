@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateBuilder(args);
 
-IConfigurationRoot configuration = new ConfigurationBuilder()
+builder.Configuration
     .AddEnvironmentVariables()
     .Build();
 
