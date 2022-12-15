@@ -4,7 +4,7 @@ using System.Runtime.Serialization;
 namespace MediatorAuthService.Application.Exceptions;
 
 [Serializable]
-internal class BusinessException : Exception
+public class BusinessException : Exception
 {
     public HttpStatusCode? HttpStatusCode { get; private set; }
 

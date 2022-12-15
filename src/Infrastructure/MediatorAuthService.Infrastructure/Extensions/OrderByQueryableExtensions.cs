@@ -1,4 +1,5 @@
-﻿using System.Linq.Expressions;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Linq.Expressions;
 
 namespace MediatorAuthService.Infrastructure.Extensions;
 
@@ -9,7 +10,7 @@ internal static class OrderByQueryableExtensions
         bool isValidProperty = IsValidProperty(typeof(T), orderKey);
 
         if (!isValidProperty)
-            throw new Exception("The entered property name is invalid!");
+            throw new ValidationException("The entered property name is invalid!");
 
         var expression = source.Expression;
 
