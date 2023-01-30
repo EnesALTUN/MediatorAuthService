@@ -43,7 +43,7 @@ public class GetUserAllQueryHandler : IRequestHandler<GetUserAllQuery, ApiRespon
 
         return new ApiResponse<List<UserDto>>
         {
-            Data = _mapper.Map<List<UserDto>>(data),
+            Data = data,
             StatusCode = (int)HttpStatusCode.OK,
             IsSuccessful = true,
             TotalItemCount = resRepo.Item2

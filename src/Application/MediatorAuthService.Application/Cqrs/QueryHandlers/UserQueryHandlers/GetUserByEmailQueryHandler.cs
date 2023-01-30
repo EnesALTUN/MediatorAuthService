@@ -36,7 +36,7 @@ public class GetUserByEmailQueryHandler : IRequestHandler<GetUserByEmailQuery, A
 
         return new ApiResponse<UserDto>
         {
-            Data = _mapper.Map<UserDto>(data),
+            Data = data,
             IsSuccessful = true,
             StatusCode = (int)HttpStatusCode.OK,
             TotalItemCount = 1

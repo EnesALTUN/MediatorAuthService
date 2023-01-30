@@ -25,12 +25,12 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, ApiRe
 
     public async Task<ApiResponse<UserDto>> Handle(UpdateUserCommand request, CancellationToken cancellationToken)
     {
-        var existUser = await _unitOfWork.GetRepository<User>().GetByIdAsync(request.Id);
+        var existUser = await _unitOfWork.GetRepository<User>().GetByIdAsync(request.Id, cancellationToken);
 
         if (existUser is null)
             throw new ValidationException("User is not found.");
 
-        if (!await ExistingEMailControlInEMailExchange(existUser.Email, request.Email))
+        if (!await ExistingEMailControlInEMailExchange(existUser.Email, request.Email, cancellationToken))
             throw new BusinessException("The entered e-mail address is used.");
 
         request.Password = string.IsNullOrEmpty(request.OldPassword) || string.IsNullOrEmpty(request.Password)
@@ -42,7 +42,7 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, ApiRe
         var mappedUser = _mapper.Map(request, existUser);
 
         _unitOfWork.GetRepository<User>().Update(mappedUser);
-        await _unitOfWork.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return new ApiResponse<UserDto>
         {
@@ -53,11 +53,11 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, ApiRe
         };
     }
 
-    private async Task<bool> ExistingEMailControlInEMailExchange(string oldEmail, string newEmail)
+    private async Task<bool> ExistingEMailControlInEMailExchange(string oldEmail, string newEmail, CancellationToken cancellationToken)
     {
         if (oldEmail.Equals(newEmail))
             return true;
 
-        return !await _unitOfWork.GetRepository<User>().AnyAsync(user => user.Email.Equals(newEmail));
+        return !await _unitOfWork.GetRepository<User>().AnyAsync(user => user.Email.Equals(newEmail), cancellationToken);
     }
 }

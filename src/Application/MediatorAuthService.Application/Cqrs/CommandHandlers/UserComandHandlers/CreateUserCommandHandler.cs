@@ -24,7 +24,7 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, ApiRe
 
     public async Task<ApiResponse<UserDto>> Handle(CreateUserCommand request, CancellationToken cancellationToken)
     {
-        bool isExistUserByEmail = await _unitOfWork.GetRepository<User>().AnyAsync(x => x.Email.Equals(request.Email));
+        bool isExistUserByEmail = await _unitOfWork.GetRepository<User>().AnyAsync(x => x.Email.Equals(request.Email), cancellationToken);
 
         if (isExistUserByEmail)
             throw new BusinessException("There is a record of the e-mail address.");
@@ -35,8 +35,8 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, ApiRe
 
         userEntity.RefreshToken = HashingManager.HashValue(Guid.NewGuid().ToString());
 
-        await _unitOfWork.GetRepository<User>().AddAsync(userEntity);
-        await _unitOfWork.SaveChangesAsync();
+        await _unitOfWork.GetRepository<User>().AddAsync(userEntity, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return new ApiResponse<UserDto>
         {
