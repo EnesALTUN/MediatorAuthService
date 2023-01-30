@@ -20,13 +20,13 @@ public class DeleteUserCommandHandler : IRequestHandler<DeleteUserCommand, ApiRe
 
     public async Task<ApiResponse<NoDataDto>> Handle(DeleteUserCommand request, CancellationToken cancellationToken)
     {
-        var existUser = await _unitOfWork.GetRepository<User>().GetByIdAsync(request.Id);
+        var existUser = await _unitOfWork.GetRepository<User>().GetByIdAsync(request.Id, cancellationToken);
 
         if (existUser is null)
             throw new ValidationException("User is not found.");
 
         _unitOfWork.GetRepository<User>().Remove(existUser);
-        await _unitOfWork.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return new ApiResponse<NoDataDto>
         {

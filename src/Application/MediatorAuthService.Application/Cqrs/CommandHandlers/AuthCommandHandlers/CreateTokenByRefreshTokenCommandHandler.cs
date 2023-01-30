@@ -46,7 +46,7 @@ public class CreateTokenByRefreshTokenCommandHandler : IRequestHandler<CreateTok
         var generatedToken = await _mediator.Send(new GenerateTokenQuery(userDto), cancellationToken);
 
         existUser.RefreshToken = generatedToken.Data.RefreshToken;
-        await _unitOfWork.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return new ApiResponse<TokenDto>
         {

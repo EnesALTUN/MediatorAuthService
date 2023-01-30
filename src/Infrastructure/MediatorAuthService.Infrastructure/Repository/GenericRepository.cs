@@ -1,4 +1,6 @@
-﻿using MediatorAuthService.Domain.Core.Base.Abstract;
+﻿using AutoMapper;
+using AutoMapper.QueryableExtensions;
+using MediatorAuthService.Domain.Core.Base.Abstract;
 using MediatorAuthService.Domain.Core.Base.Concrete;
 using MediatorAuthService.Domain.Core.Pagination;
 using MediatorAuthService.Infrastructure.Extensions;
@@ -11,21 +13,33 @@ public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEnt
 {
     private readonly DbContext _context;
     private readonly DbSet<TEntity> _dbSet;
+    private readonly IMapper _mapper;
 
-    public GenericRepository(DbContext context)
+    public GenericRepository(DbContext context, IMapper mapper)
     {
         _context = context ?? throw new ArgumentNullException(nameof(context));
         _dbSet = _context.Set<TEntity>();
+        _mapper = mapper;
     }
 
-    public async Task<TEntity> GetByIdAsync(Guid id)
+
+    public async Task<TEntity> GetByIdAsync(Guid id, CancellationToken cancellationToken)
     {
-        var entity = await _dbSet.FindAsync(id);
+        var entity = await _dbSet.FindAsync(new object[] { id }, cancellationToken);
 
         if (entity is not null)
             _context.Entry(entity).State = EntityState.Detached;
 
         return entity;
+    }
+
+    public async Task<TDto> GetByIdWithProjectToAsync<TDto>(Guid id, CancellationToken cancellationToken) where TDto : BaseDto
+    {
+        var record = await _dbSet
+            .ProjectTo<TDto>(_mapper.ConfigurationProvider)
+            .SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
+
+        return record;
     }
 
     public (IQueryable<TEntity>, int) GetAll(PaginationParams paginationParams)
@@ -50,9 +64,9 @@ public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEnt
         return _dbSet.Where(predicate);
     }
 
-    public async Task AddAsync(TEntity entity)
+    public async Task AddAsync(TEntity entity, CancellationToken cancellationToken)
     {
-        await _dbSet.AddAsync(entity);
+        await _dbSet.AddAsync(entity, cancellationToken);
     }
 
     public void Remove(TEntity entity)
@@ -65,8 +79,8 @@ public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEnt
         _context.Entry(entity).State = EntityState.Modified;
     }
 
-    public async Task<bool> AnyAsync(Expression<Func<TEntity, bool>> predicate)
+    public async Task<bool> AnyAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken)
     {
-        return await _dbSet.AnyAsync(predicate);
+        return await _dbSet.AnyAsync(predicate, cancellationToken);
     }
 }

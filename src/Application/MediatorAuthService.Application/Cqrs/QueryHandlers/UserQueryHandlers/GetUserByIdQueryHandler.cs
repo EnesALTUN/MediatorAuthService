@@ -14,26 +14,25 @@ namespace MediatorAuthService.Application.Cqrs.QueryHandlers.UserQueryHandlers;
 public class GetUserByIdQueryHandler : IRequestHandler<GetUserByIdQuery, ApiResponse<UserDto>>
 {
     private readonly IUnitOfWork<AppDbContext> _unitOfWork;
-    private readonly IMapper _mapper;
 
-    public GetUserByIdQueryHandler(IUnitOfWork<AppDbContext> unitOfWork, IMapper mapper)
+    public GetUserByIdQueryHandler(IUnitOfWork<AppDbContext> unitOfWork)
     {
         _unitOfWork = unitOfWork;
-        _mapper = mapper;
     }
 
     public async Task<ApiResponse<UserDto>> Handle(GetUserByIdQuery request, CancellationToken cancellationToken)
     {
-        var existEntity = await _unitOfWork.GetRepository<User>().GetByIdAsync(request.Id);
+        var existRecord = await _unitOfWork.GetRepository<User>().GetByIdWithProjectToAsync<UserDto>(request.Id, cancellationToken);
 
-        if (existEntity is null)
+        if (existRecord is null)
             throw new ValidationException("User is not found.");
 
         return new ApiResponse<UserDto>
         {
-            Data = _mapper.Map<UserDto>(existEntity),
+            Data = existRecord,
             StatusCode = (int)HttpStatusCode.OK,
             IsSuccessful = true,
+            TotalItemCount = 1
         };
     }
 }

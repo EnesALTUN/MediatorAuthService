@@ -1,9 +1,9 @@
-﻿namespace MediatorAuthService.Application.Dtos.UserDtos;
+﻿using MediatorAuthService.Domain.Core.Base.Concrete;
 
-public class UserDto
+namespace MediatorAuthService.Application.Dtos.UserDtos;
+
+public class UserDto : BaseDto
 {
-    public Guid Id { get; set; }
-
     public string Name { get; set; }
 
     public string Surname { get; set; }

@@ -10,16 +10,16 @@ public interface IUnitOfWork : IAsyncDisposable
 {
     IGenericRepository<TEntity> GetRepository<TEntity>() where TEntity : BaseEntity, IEntity;
 
-    Task<int> SaveChangesAsync();
+    Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 
-    Task<IDbContextTransaction> BeginTransactionAsync();
+    Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken);
 
-    Task CommitAsync(bool isSaveChanges = true);
+    Task CommitAsync(CancellationToken cancellationToken, bool isSaveChanges = true);
 
-    Task RollBackAsync();
+    Task RollBackAsync(CancellationToken cancellationToken);
 }
 
-public interface IUnitOfWork<TContext> : IUnitOfWork, IAsyncDisposable where TContext : DbContext
+public interface IUnitOfWork<TContext> : IUnitOfWork where TContext : DbContext
 {
     TContext Context { get; }
 }

@@ -41,7 +41,7 @@ public class ChangePasswordUserCommandHandler : IRequestHandler<ChangePasswordUs
         var hashedNewPassword = HashingManager.HashValue(request.NewPassword);
 
         existUser.Password = hashedNewPassword;
-        await _unitOfWork.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return new ApiResponse<NoDataDto>
         {
