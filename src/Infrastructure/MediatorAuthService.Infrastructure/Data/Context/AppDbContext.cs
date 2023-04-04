@@ -39,6 +39,12 @@ public class AppDbContext : DbContext
                     baseEntity.ModifiedDate = DateTime.Now;
                     baseEntity.ModifiedUserId = currentUserId;
                     break;
+                case EntityState.Deleted:
+                    e.State = EntityState.Modified;
+                    baseEntity.DeletedDate = DateTime.Now;
+                    baseEntity.DeletedUserId = currentUserId;
+                    baseEntity.IsActive = false;
+                    break;
             }
         });
 

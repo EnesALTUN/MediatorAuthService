@@ -18,3 +18,8 @@ public abstract class BaseEntity
 
     public Guid? DeletedUserId { get; set; }
 }
+
+public abstract class BaseEntity<TId> : BaseEntity
+{
+    public new TId Id { get; set; }
+}
