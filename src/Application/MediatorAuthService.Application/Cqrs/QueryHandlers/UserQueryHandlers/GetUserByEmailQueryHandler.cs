@@ -26,17 +26,17 @@ public class GetUserByEmailQueryHandler : IRequestHandler<GetUserByEmailQuery, A
 
     public async Task<ApiResponse<UserDto>> Handle(GetUserByEmailQuery request, CancellationToken cancellationToken)
     {
-        var data = await _unitOfWork.GetRepository<User>()
+        UserDto? user = await _unitOfWork.GetRepository<User>()
             .Where(x => x.Email.Equals(request.Email))
             .ProjectTo<UserDto>(_mapper.ConfigurationProvider)
             .SingleOrDefaultAsync(cancellationToken);
 
-        if (data is null)
+        if (user is null)
             throw new ValidationException("User is not found.");
 
         return new ApiResponse<UserDto>
         {
-            Data = data,
+            Data = user,
             IsSuccessful = true,
             StatusCode = (int)HttpStatusCode.OK,
             TotalItemCount = 1

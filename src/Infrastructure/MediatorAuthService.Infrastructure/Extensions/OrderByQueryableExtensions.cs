@@ -12,13 +12,13 @@ internal static class OrderByQueryableExtensions
         if (!isValidProperty)
             throw new ValidationException("The entered property name is invalid!");
 
-        var expression = source.Expression;
+        Expression expression = source.Expression;
 
-        var parameter = Expression.Parameter(typeof(T), "x");
+        ParameterExpression parameter = Expression.Parameter(typeof(T), "x");
 
-        var selector = Expression.PropertyOrField(parameter, orderKey);
+        MemberExpression selector = Expression.PropertyOrField(parameter, orderKey);
 
-        var method = string.Equals(orderType, "descending", StringComparison.OrdinalIgnoreCase)
+        String method = string.Equals(orderType, "descending", StringComparison.OrdinalIgnoreCase)
              ? "OrderByDescending" : "OrderBy";
 
         expression = Expression.Call(
@@ -33,6 +33,6 @@ internal static class OrderByQueryableExtensions
 
     private static bool IsValidProperty(Type type, string findPropertyName)
     {
-        return type.GetProperties().Any(x => x.Name.Equals(findPropertyName));
+        return type.GetProperties().Any(x => x.Name.Equals(findPropertyName, StringComparison.Ordinal));
     }
 }

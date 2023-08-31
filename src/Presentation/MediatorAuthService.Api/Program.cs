@@ -4,7 +4,7 @@ using MediatorAuthService.Application.Middlewares;
 using MediatorAuthService.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
 
-var builder = WebApplication.CreateBuilder(args);
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 builder.Configuration
     .AddEnvironmentVariables()
@@ -24,7 +24,7 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
     options.SuppressModelStateInvalidFilter = true;
 });
 
-var app = builder.Build();
+WebApplication app = builder.Build();
 
 app.ApplyMigration();
 

@@ -28,7 +28,7 @@ public class CreateTokenQueryHandler : IRequestHandler<CreateTokenQuery, ApiResp
 
     public async Task<ApiResponse<TokenDto>> Handle(CreateTokenQuery request, CancellationToken cancellationToken)
     {
-        var existUser = await _unitOfWork.GetRepository<User>()
+        User? existUser = await _unitOfWork.GetRepository<User>()
             .Where(x => x.Email.Equals(request.Email))
             .SingleOrDefaultAsync(cancellationToken);
 
@@ -41,9 +41,9 @@ public class CreateTokenQueryHandler : IRequestHandler<CreateTokenQuery, ApiResp
         if (!HashingManager.VerifyHashedValue(existUser.Password, request.Password))
             throw new ValidationException("User is not found.");
 
-        var userDto = _mapper.Map<UserDto>(existUser);
+        UserDto userDto = _mapper.Map<UserDto>(existUser);
 
-        var generatedToken = await _mediator.Send(new GenerateTokenQuery(userDto), cancellationToken);
+        ApiResponse<TokenDto>? generatedToken = await _mediator.Send(new GenerateTokenQuery(userDto), cancellationToken);
 
         return new ApiResponse<TokenDto>
         {

@@ -22,10 +22,9 @@ public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEnt
         _mapper = mapper;
     }
 
-
-    public async Task<TEntity> GetByIdAsync(Guid id, CancellationToken cancellationToken)
+    public async Task<TEntity?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
     {
-        var entity = await _dbSet.FindAsync(new object[] { id }, cancellationToken);
+        TEntity? entity = await _dbSet.FindAsync(new object[] { id }, cancellationToken);
 
         if (entity is not null)
             _context.Entry(entity).State = EntityState.Detached;
@@ -33,18 +32,21 @@ public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEnt
         return entity;
     }
 
-    public async Task<TDto> GetByIdWithProjectToAsync<TDto>(Guid id, CancellationToken cancellationToken) where TDto : BaseDto
+    public async Task<TDto?> GetByIdWithProjectToAsync<TDto>(Guid id, CancellationToken cancellationToken) where TDto : BaseDto
     {
-        var record = await _dbSet
+        TDto? record = await _dbSet
             .ProjectTo<TDto>(_mapper.ConfigurationProvider)
             .SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
 
         return record;
     }
 
-    public (IQueryable<TEntity>, int) GetAll(PaginationParams paginationParams)
+    public (IQueryable<TEntity>, int) GetAll(PaginationParams paginationParams, bool isNotTracking = true)
     {
-        var query = _dbSet.AsNoTracking();
+        IQueryable<TEntity> query = _dbSet;
+
+        if (isNotTracking)
+            query = query.AsNoTracking();
 
         int count = query.Count();
 

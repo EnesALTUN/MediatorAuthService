@@ -29,7 +29,7 @@ public class ExceptionHandlerMiddleware
         {
             _logger.LogError(ex.Message);
 
-            var response = httpContext.Response;
+            HttpResponse response = httpContext.Response;
             response.ContentType = "application/json";
             response.StatusCode = (int)HttpStatusCode.BadRequest;
 
@@ -37,7 +37,7 @@ public class ExceptionHandlerMiddleware
                 ? ex.Errors.Select(x => x.ToString()).ToList()
                 : new List<string> { ex.Message };
 
-            var result = JsonSerializer.Serialize(new ApiResponse<string>()
+            string result = JsonSerializer.Serialize(new ApiResponse<string>()
             {
                 Errors = errors,
                 IsSuccessful = false,
@@ -50,11 +50,11 @@ public class ExceptionHandlerMiddleware
         {
             _logger.LogError(ex.Message);
 
-            var response = httpContext.Response;
+            HttpResponse response = httpContext.Response;
             response.ContentType = "application/json";
             response.StatusCode = Convert.ToInt16(ex.HttpStatusCode ?? HttpStatusCode.BadRequest);
 
-            var result = JsonSerializer.Serialize(new ApiResponse<string>()
+            string result = JsonSerializer.Serialize(new ApiResponse<string>()
             {
                 Errors = new List<string> { ex.Message },
                 IsSuccessful = false,
@@ -67,10 +67,10 @@ public class ExceptionHandlerMiddleware
         {
             _logger.LogError(ex.Message);
 
-            var response = httpContext.Response;
+            HttpResponse response = httpContext.Response;
             response.ContentType = "application/json";
 
-            var result = JsonSerializer.Serialize(new ApiResponse<string>()
+            string result = JsonSerializer.Serialize(new ApiResponse<string>()
             {
                 Errors = new List<string> { "Sorry, you do not have the necessary permissions to take the relevant action." },
                 IsSuccessful = false,

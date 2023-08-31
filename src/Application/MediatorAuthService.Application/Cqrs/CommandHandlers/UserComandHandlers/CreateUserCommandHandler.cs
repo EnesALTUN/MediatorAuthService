@@ -31,7 +31,7 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, ApiRe
 
         request.Password = HashingManager.HashValue(request.Password);
 
-        var userEntity = _mapper.Map<User>(request);
+        User userEntity = _mapper.Map<User>(request);
 
         userEntity.RefreshToken = HashingManager.HashValue(Guid.NewGuid().ToString());
 
