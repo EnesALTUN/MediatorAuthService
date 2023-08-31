@@ -27,20 +27,20 @@ internal class GenerateTokenQueryHandler : IRequestHandler<GenerateTokenQuery, A
         DateTime accessTokenExpiration = DateTime.Now.AddDays(_tokenOption.AccessTokenExpiration);
         DateTime refreshTokenExpiration = DateTime.Now.AddDays(_tokenOption.RefreshTokenExpiration);
 
-        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_tokenOption.SecurityKey));
+        SymmetricSecurityKey securityKey = new(Encoding.UTF8.GetBytes(_tokenOption.SecurityKey));
 
-        var signingCredentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256Signature);
+        SigningCredentials signingCredentials = new(securityKey, SecurityAlgorithms.HmacSha256Signature);
 
-        var jwtSecurityToken = new JwtSecurityToken(
+        JwtSecurityToken jwtSecurityToken = new(
             issuer: _tokenOption.Issuer,
             expires: accessTokenExpiration,
             notBefore: DateTime.Now,
             claims: UserClaimManager.GetClaims(request.User, _tokenOption.Audience),
             signingCredentials: signingCredentials);
 
-        var token = new JwtSecurityTokenHandler().WriteToken(jwtSecurityToken);
+        string token = new JwtSecurityTokenHandler().WriteToken(jwtSecurityToken);
 
-        var tokenDto = new TokenDto
+        TokenDto tokenDto = new()
         {
             AccessToken = token,
             RefreshToken = HashingManager.HashValue(Guid.NewGuid().ToString()),

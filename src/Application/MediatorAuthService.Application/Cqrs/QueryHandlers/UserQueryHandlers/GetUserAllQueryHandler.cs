@@ -26,7 +26,7 @@ public class GetUserAllQueryHandler : IRequestHandler<GetUserAllQuery, ApiRespon
 
     public async Task<ApiResponse<List<UserDto>>> Handle(GetUserAllQuery request, CancellationToken cancellationToken)
     {
-        var resRepo = _unitOfWork.GetRepository<User>()
+        (IQueryable<User> userQuery, int totalCount) = _unitOfWork.GetRepository<User>()
             .GetAll(new PaginationParams
             {
                 PageId = request.PageId,
@@ -35,22 +35,22 @@ public class GetUserAllQueryHandler : IRequestHandler<GetUserAllQuery, ApiRespon
                 OrderType = request.OrderType
             });
 
-        IQueryable<User> filteredData = ApplyFilter(resRepo.Item1, request.Name, request.Surname, request.Email, request.IsActive);
+        IQueryable<User> filteredData = ApplyFilter(userQuery, request.Name, request.Surname, request.Email, request.IsActive);
 
-        var data = await filteredData
+        List<UserDto> items = await filteredData
             .ProjectTo<UserDto>(_mapper.ConfigurationProvider)
             .ToListAsync(cancellationToken);
 
         return new ApiResponse<List<UserDto>>
         {
-            Data = data,
+            Data = items,
             StatusCode = (int)HttpStatusCode.OK,
             IsSuccessful = true,
-            TotalItemCount = resRepo.Item2
+            TotalItemCount = totalCount
         };
     }
 
-    private IQueryable<User> ApplyFilter(IQueryable<User> source, string? name, string? surname, string? email, bool? isActive)
+    private static IQueryable<User> ApplyFilter(IQueryable<User> source, string? name, string? surname, string? email, bool? isActive)
     {
         if (!string.IsNullOrEmpty(name))
             source = source.Where(x => x.Name.Contains(name));

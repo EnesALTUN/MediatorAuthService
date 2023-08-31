@@ -13,7 +13,7 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddApplication(this IServiceCollection services, IConfiguration configuration)
     {
-        var assembly = Assembly.GetExecutingAssembly();
+        Assembly assembly = Assembly.GetExecutingAssembly();
 
         services.AddMediatR(assembly);
 
@@ -25,7 +25,7 @@ public static class DependencyInjection
 
         services.Configure<MediatorTokenOptions>(configuration.GetSection("JwtTokenOption"));
 
-        var tokenOption = configuration.GetSection("JwtTokenOption").Get<MediatorTokenOptions>();
+        MediatorTokenOptions tokenOption = configuration.GetSection("JwtTokenOption").Get<MediatorTokenOptions>();
         services.AddMediatorJwtAuth(tokenOption);
 
         return services;

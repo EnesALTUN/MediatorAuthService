@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using FluentValidation;
+﻿using FluentValidation;
 using MediatorAuthService.Application.Cqrs.Queries.UserQueries;
 using MediatorAuthService.Application.Dtos.UserDtos;
 using MediatorAuthService.Application.Wrappers;
@@ -22,14 +21,14 @@ public class GetUserByIdQueryHandler : IRequestHandler<GetUserByIdQuery, ApiResp
 
     public async Task<ApiResponse<UserDto>> Handle(GetUserByIdQuery request, CancellationToken cancellationToken)
     {
-        var existRecord = await _unitOfWork.GetRepository<User>().GetByIdWithProjectToAsync<UserDto>(request.Id, cancellationToken);
+        UserDto? existUser = await _unitOfWork.GetRepository<User>().GetByIdWithProjectToAsync<UserDto>(request.Id, cancellationToken);
 
-        if (existRecord is null)
+        if (existUser is null)
             throw new ValidationException("User is not found.");
 
         return new ApiResponse<UserDto>
         {
-            Data = existRecord,
+            Data = existUser,
             StatusCode = (int)HttpStatusCode.OK,
             IsSuccessful = true,
             TotalItemCount = 1

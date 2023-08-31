@@ -25,7 +25,7 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, ApiRe
 
     public async Task<ApiResponse<UserDto>> Handle(UpdateUserCommand request, CancellationToken cancellationToken)
     {
-        var existUser = await _unitOfWork.GetRepository<User>().GetByIdAsync(request.Id, cancellationToken);
+        User? existUser = await _unitOfWork.GetRepository<User>().GetByIdAsync(request.Id, cancellationToken);
 
         if (existUser is null)
             throw new ValidationException("User is not found.");
@@ -39,14 +39,14 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, ApiRe
                 ? HashingManager.HashValue(request.Password)
                 : throw new ValidationException("Your password does not match.");
 
-        var mappedUser = _mapper.Map(request, existUser);
+        _mapper.Map(request, existUser);
 
-        _unitOfWork.GetRepository<User>().Update(mappedUser);
+        _unitOfWork.GetRepository<User>().Update(existUser);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return new ApiResponse<UserDto>
         {
-            Data = _mapper.Map<UserDto>(mappedUser),
+            Data = _mapper.Map<UserDto>(existUser),
             IsSuccessful = true,
             StatusCode = (int)HttpStatusCode.OK,
             TotalItemCount = 1

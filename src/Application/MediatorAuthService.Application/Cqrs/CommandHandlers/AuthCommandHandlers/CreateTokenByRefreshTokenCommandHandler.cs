@@ -4,6 +4,8 @@ using MediatorAuthService.Application.Cqrs.Commands.AuthCommands;
 using MediatorAuthService.Application.Cqrs.Queries.AuthQueries;
 using MediatorAuthService.Application.Dtos.AuthDtos;
 using MediatorAuthService.Application.Dtos.UserDtos;
+using MediatorAuthService.Application.Exceptions;
+using MediatorAuthService.Application.Extensions;
 using MediatorAuthService.Application.Wrappers;
 using MediatorAuthService.Domain.Entities;
 using MediatorAuthService.Infrastructure.UnitOfWork;
@@ -11,7 +13,6 @@ using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System.Net;
-using System.Security.Claims;
 
 namespace MediatorAuthService.Application.Cqrs.CommandHandlers.AuthCommandHandlers;
 
@@ -32,18 +33,21 @@ public class CreateTokenByRefreshTokenCommandHandler : IRequestHandler<CreateTok
 
     public async Task<ApiResponse<TokenDto>> Handle(CreateTokenByRefreshTokenCommand request, CancellationToken cancellationToken)
     {
-        Guid userId = Guid.Parse(_httpContextAccessor.HttpContext.User.Claims.First(x => x.Type.Equals(ClaimTypes.NameIdentifier)).Value);
+        Guid userId = _httpContextAccessor.HttpContext!.User.Id();
 
-        var existUser = await _unitOfWork.GetRepository<User>()
+        User? existUser = await _unitOfWork.GetRepository<User>()
             .Where(user => user.Id.Equals(userId) && user.RefreshToken.Equals(request.RefreshToken) && user.IsActive)
             .SingleOrDefaultAsync(cancellationToken);
 
         if (existUser is null)
             throw new ValidationException("User or refresh token not found.");
 
-        var userDto = _mapper.Map<UserDto>(existUser);
+        UserDto userDto = _mapper.Map<UserDto>(existUser);
 
-        var generatedToken = await _mediator.Send(new GenerateTokenQuery(userDto), cancellationToken);
+        ApiResponse<TokenDto> generatedToken = await _mediator.Send(new GenerateTokenQuery(userDto), cancellationToken);
+
+        if (!generatedToken.IsSuccessful || generatedToken.Data is null)
+            throw new BusinessException("Failed to create token");
 
         existUser.RefreshToken = generatedToken.Data.RefreshToken;
         await _unitOfWork.SaveChangesAsync(cancellationToken);

@@ -8,7 +8,7 @@ internal static class UserClaimManager
 {
     public static IEnumerable<Claim> GetClaims(UserDto user, List<string> audiences)
     {
-        var userList = new List<Claim> {
+        List<Claim> userList = new() {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
                 new Claim(ClaimTypes.Name, user.Name),

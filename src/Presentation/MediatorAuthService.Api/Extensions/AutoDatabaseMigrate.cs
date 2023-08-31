@@ -7,9 +7,9 @@ public static class AutoDatabaseMigrate
 {
     public static WebApplication ApplyMigration(this WebApplication app)
     {
-        using (var serviceScope = app.Services.CreateScope())
+        using (IServiceScope serviceScope = app.Services.CreateScope())
         {
-            var db = serviceScope.ServiceProvider.GetRequiredService<AppDbContext>();
+            AppDbContext db = serviceScope.ServiceProvider.GetRequiredService<AppDbContext>();
 
             db.Database.MigrateAsync().GetAwaiter().GetResult();
         }

@@ -7,11 +7,11 @@ namespace MediatorAuthService.Infrastructure.Repository;
 
 public interface IGenericRepository<TEntity> where TEntity : IEntity
 {
-    Task<TEntity> GetByIdAsync(Guid id, CancellationToken cancellationToken);
+    Task<TEntity?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
 
-    Task<TDto> GetByIdWithProjectToAsync<TDto>(Guid id, CancellationToken cancellationToken) where TDto : BaseDto;
+    Task<TDto?> GetByIdWithProjectToAsync<TDto>(Guid id, CancellationToken cancellationToken) where TDto : BaseDto;
 
-    (IQueryable<TEntity>, int) GetAll(PaginationParams paginationParams);
+    (IQueryable<TEntity>, int) GetAll(PaginationParams paginationParams, bool isNotTracking = true);
 
     IQueryable<TEntity> Where(Expression<Func<TEntity, bool>> predicate);
 

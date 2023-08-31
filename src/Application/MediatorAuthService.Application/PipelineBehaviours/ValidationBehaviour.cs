@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using FluentValidation.Results;
 using MediatR;
 
 namespace MediatorAuthService.Application.PipelineBehaviours;
@@ -15,8 +16,8 @@ public class ValidationBehaviour<TRequest, TResponse> : IPipelineBehavior<TReque
 
     public Task<TResponse> Handle(TRequest request, CancellationToken cancellationToken, RequestHandlerDelegate<TResponse> next)
     {
-        var context = new ValidationContext<TRequest>(request);
-        var failures = _validators.Select(x => x.Validate(context))
+        ValidationContext<TRequest> context = new(request);
+        List<ValidationFailure> failures = _validators.Select(x => x.Validate(context))
                                   .SelectMany(x => x.Errors)
                                   .Where(x => x != null)
                                   .ToList();
