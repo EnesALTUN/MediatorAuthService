@@ -11,6 +11,10 @@ using System.Net;
 
 namespace MediatorAuthService.Application.Cqrs.CommandHandlers.UserComandHandlers;
 
+/// <summary>
+/// Adds a new user to the system. 
+/// If the sent email address is in the system, an error is returned.
+/// </summary>
 public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, ApiResponse<UserDto>>
 {
     private readonly IUnitOfWork _unitOfWork;

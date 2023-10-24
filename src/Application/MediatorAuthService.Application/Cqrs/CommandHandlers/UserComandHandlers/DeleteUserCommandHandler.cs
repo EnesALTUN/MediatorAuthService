@@ -9,6 +9,11 @@ using System.Net;
 
 namespace MediatorAuthService.Application.Cqrs.CommandHandlers.UserComandHandlers;
 
+/// <summary>
+/// Deletes the user in the system.
+///     - If the sent user ID exists in the system, the user is deleted.
+///     - If the sent user ID is not found in the system, an error is returned.
+/// </summary>
 public class DeleteUserCommandHandler : IRequestHandler<DeleteUserCommand, ApiResponse<NoDataDto>>
 {
     private readonly IUnitOfWork _unitOfWork;
