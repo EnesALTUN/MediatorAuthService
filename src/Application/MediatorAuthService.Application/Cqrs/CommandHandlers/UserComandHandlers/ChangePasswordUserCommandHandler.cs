@@ -13,6 +13,13 @@ using System.Net;
 
 namespace MediatorAuthService.Application.Cqrs.CommandHandlers.UserComandHandlers;
 
+/// <summary>
+/// The ID information of the request owner is searched in the database with the active filter.
+/// - If a matching record is found, the password sent from the request is compared with the passwords in the record in the database. 
+///     - If the passwords do not match, an error is returned to the user. 
+///     - If the passwords match, the new password from the request is assigned to the user.
+/// - If no matching record is found, an error is returned.
+/// </summary>
 public class ChangePasswordUserCommandHandler : IRequestHandler<ChangePasswordUserCommand, ApiResponse<NoDataDto>>
 {
     private readonly IUnitOfWork _unitOfWork;

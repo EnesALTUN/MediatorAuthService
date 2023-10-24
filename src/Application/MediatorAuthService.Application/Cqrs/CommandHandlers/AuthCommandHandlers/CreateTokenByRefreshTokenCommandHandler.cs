@@ -16,6 +16,11 @@ using System.Net;
 
 namespace MediatorAuthService.Application.Cqrs.CommandHandlers.AuthCommandHandlers;
 
+/// <summary>
+/// It queries the database for the record matching the request owner's ID information and the sent refresh token information.
+/// If a matching record is found, new token information is generated and returned and the user's refresh token information is updated.
+/// If no matching record is found, an error is returned.
+/// </summary>
 public class CreateTokenByRefreshTokenCommandHandler : IRequestHandler<CreateTokenByRefreshTokenCommand, ApiResponse<TokenDto>>
 {
     private readonly IUnitOfWork _unitOfWork;

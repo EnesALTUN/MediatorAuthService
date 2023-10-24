@@ -12,6 +12,13 @@ using System.Net;
 
 namespace MediatorAuthService.Application.Cqrs.CommandHandlers.UserComandHandlers;
 
+/// <summary>
+/// The ID information of the request owner is searched in the database.
+/// - If a matching record is found, first the user's email address in the system is compared with the email address received from the request.
+///     In this comparison, if the user's email address wants to be changed, it is checked that the user has entered an email address that does not exist in the system.
+/// - If the user's old password and full password are sent, the old password in the request is compared with the user password in the system.
+///     If the comparison result is successful, the new password from the request is assigned to the user; if unsuccessful, an error is returned to the user.
+/// </summary>
 public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, ApiResponse<UserDto>>
 {
     private readonly IUnitOfWork _unitOfWork;
