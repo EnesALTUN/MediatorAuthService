@@ -10,21 +10,12 @@ using System.Net;
 
 namespace MediatorAuthService.Application.Cqrs.QueryHandlers.UserQueryHandlers;
 
-public class GetUserByIdQueryHandler : IRequestHandler<GetUserByIdQuery, ApiResponse<UserDto>>
+public class GetUserByIdQueryHandler(IUnitOfWork<AppDbContext> _unitOfWork) : IRequestHandler<GetUserByIdQuery, ApiResponse<UserDto>>
 {
-    private readonly IUnitOfWork<AppDbContext> _unitOfWork;
-
-    public GetUserByIdQueryHandler(IUnitOfWork<AppDbContext> unitOfWork)
-    {
-        _unitOfWork = unitOfWork;
-    }
-
     public async Task<ApiResponse<UserDto>> Handle(GetUserByIdQuery request, CancellationToken cancellationToken)
     {
-        UserDto? existUser = await _unitOfWork.GetRepository<User>().GetByIdWithProjectToAsync<UserDto>(request.Id, cancellationToken);
-
-        if (existUser is null)
-            throw new ValidationException("User is not found.");
+        UserDto? existUser = await _unitOfWork.GetRepository<User>().GetByIdWithProjectToAsync<UserDto>(request.Id, cancellationToken)
+            ?? throw new ValidationException("User is not found.");
 
         return new ApiResponse<UserDto>
         {

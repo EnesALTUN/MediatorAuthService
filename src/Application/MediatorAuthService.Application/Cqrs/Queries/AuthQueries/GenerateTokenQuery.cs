@@ -5,12 +5,7 @@ using MediatR;
 
 namespace MediatorAuthService.Application.Cqrs.Queries.AuthQueries;
 
-internal class GenerateTokenQuery : IRequest<ApiResponse<TokenDto>>
+internal class GenerateTokenQuery(UserDto user) : IRequest<ApiResponse<TokenDto>>
 {
-    public UserDto User { get; set; }
-
-    public GenerateTokenQuery(UserDto user)
-    {
-        User = user;
-    }
+    public UserDto User { get; set; } = user;
 }

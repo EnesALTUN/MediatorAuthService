@@ -15,17 +15,8 @@ namespace MediatorAuthService.Application.Cqrs.CommandHandlers.UserComandHandler
 /// Adds a new user to the system. 
 /// If the sent email address is in the system, an error is returned.
 /// </summary>
-public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, ApiResponse<UserDto>>
+public class CreateUserCommandHandler(IUnitOfWork _unitOfWork, IMapper _mapper) : IRequestHandler<CreateUserCommand, ApiResponse<UserDto>>
 {
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly IMapper _mapper;
-
-    public CreateUserCommandHandler(IUnitOfWork unitOfWork, IMapper mapper)
-    {
-        _unitOfWork = unitOfWork;
-        _mapper = mapper;
-    }
-
     public async Task<ApiResponse<UserDto>> Handle(CreateUserCommand request, CancellationToken cancellationToken)
     {
         bool isExistUserByEmail = await _unitOfWork.GetRepository<User>().AnyAsync(x => x.Email.Equals(request.Email), cancellationToken);

@@ -61,28 +61,13 @@ public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEnt
         return (query, count);
     }
 
-    public IQueryable<TEntity> Where(Expression<Func<TEntity, bool>> predicate)
-    {
-        return _dbSet.Where(predicate);
-    }
+    public IQueryable<TEntity> Where(Expression<Func<TEntity, bool>> predicate) => _dbSet.Where(predicate);
 
-    public async Task AddAsync(TEntity entity, CancellationToken cancellationToken)
-    {
-        await _dbSet.AddAsync(entity, cancellationToken);
-    }
+    public async Task AddAsync(TEntity entity, CancellationToken cancellationToken) => await _dbSet.AddAsync(entity, cancellationToken);
 
-    public void Remove(TEntity entity)
-    {
-        _dbSet.Remove(entity);
-    }
+    public void Remove(TEntity entity) => _dbSet.Remove(entity);
 
-    public void Update(TEntity entity)
-    {
-        _context.Entry(entity).State = EntityState.Modified;
-    }
+    public void Update(TEntity entity) => _context.Entry(entity).State = EntityState.Modified;
 
-    public async Task<bool> AnyAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken)
-    {
-        return await _dbSet.AnyAsync(predicate, cancellationToken);
-    }
+    public async Task<bool> AnyAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken) => await _dbSet.AnyAsync(predicate, cancellationToken);
 }

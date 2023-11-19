@@ -5,9 +5,10 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:5216
-      - ConnectionStrings:Default=Data Source=s_sqlserver;Initial Catalog=MeditorAuthService;User Id=sa;Password=MediatorAuthService-SqlServer-MaxLevel(!)Password;Integrated Security=False
+      - ConnectionStrings:Default=Data Source=s_sqlserver;Initial Catalog=MeditorAuthService;User Id=sa;Password=MediatorAuthService-SqlServer-MaxLevel(!)Password;Integrated Security=False;TrustServerCertificate=True
     ports:
       - "5216:5216"
+      - "7216:7216"
     networks:
       - net_backendservices
       - sql_db

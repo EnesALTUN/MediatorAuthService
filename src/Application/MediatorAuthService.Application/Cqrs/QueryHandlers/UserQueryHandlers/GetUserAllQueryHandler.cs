@@ -13,17 +13,8 @@ using System.Net;
 
 namespace MediatorAuthService.Application.Cqrs.QueryHandlers.UserQueryHandlers;
 
-public class GetUserAllQueryHandler : IRequestHandler<GetUserAllQuery, ApiResponse<List<UserDto>>>
+public class GetUserAllQueryHandler(IUnitOfWork<AppDbContext> _unitOfWork, IMapper _mapper) : IRequestHandler<GetUserAllQuery, ApiResponse<List<UserDto>>>
 {
-    private readonly IUnitOfWork<AppDbContext> _unitOfWork;
-    private readonly IMapper _mapper;
-
-    public GetUserAllQueryHandler(IUnitOfWork<AppDbContext> unitOfWork, IMapper mapper)
-    {
-        _unitOfWork = unitOfWork;
-        _mapper = mapper;
-    }
-
     public async Task<ApiResponse<List<UserDto>>> Handle(GetUserAllQuery request, CancellationToken cancellationToken)
     {
         (IQueryable<User> userQuery, int totalCount) = _unitOfWork.GetRepository<User>()

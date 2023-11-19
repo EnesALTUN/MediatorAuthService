@@ -6,15 +6,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MediatorAuthService.Infrastructure.Data.Context;
 
-public class AppDbContext : DbContext
+public class AppDbContext(DbContextOptions<AppDbContext> _options, IHttpContextAccessor _httpContextAccessor) : DbContext(_options)
 {
-    private readonly IHttpContextAccessor _httpContextAccessor;
-
-    public AppDbContext(DbContextOptions<AppDbContext> options, IHttpContextAccessor httpContextAccessor) : base(options)
-    {
-        _httpContextAccessor = httpContextAccessor;
-    }
-
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(GetType().Assembly);

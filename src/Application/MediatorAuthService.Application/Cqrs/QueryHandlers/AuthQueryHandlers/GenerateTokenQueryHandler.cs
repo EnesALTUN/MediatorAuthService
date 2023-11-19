@@ -13,14 +13,9 @@ using System.Text;
 
 namespace MediatorAuthService.Application.Cqrs.QueryHandlers.AuthQueryHandlers;
 
-internal class GenerateTokenQueryHandler : IRequestHandler<GenerateTokenQuery, ApiResponse<TokenDto>>
+internal class GenerateTokenQueryHandler(IOptions<MediatorTokenOptions> tokenOption) : IRequestHandler<GenerateTokenQuery, ApiResponse<TokenDto>>
 {
-    private readonly MediatorTokenOptions _tokenOption;
-
-    public GenerateTokenQueryHandler(IOptions<MediatorTokenOptions> tokenOption)
-    {
-        _tokenOption = tokenOption.Value;
-    }
+    private readonly MediatorTokenOptions _tokenOption = tokenOption.Value;
 
     public Task<ApiResponse<TokenDto>> Handle(GenerateTokenQuery request, CancellationToken cancellationToken)
     {

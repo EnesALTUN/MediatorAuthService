@@ -4,12 +4,7 @@ using MediatR;
 
 namespace MediatorAuthService.Application.Cqrs.Commands.AuthCommands;
 
-public class CreateTokenByRefreshTokenCommand : IRequest<ApiResponse<TokenDto>>
+public class CreateTokenByRefreshTokenCommand(string refreshToken) : IRequest<ApiResponse<TokenDto>>
 {
-    public string RefreshToken { get; set; }
-
-    public CreateTokenByRefreshTokenCommand(string refreshToken)
-    {
-        RefreshToken = refreshToken;
-    }
+    public string RefreshToken { get; set; } = refreshToken;
 }

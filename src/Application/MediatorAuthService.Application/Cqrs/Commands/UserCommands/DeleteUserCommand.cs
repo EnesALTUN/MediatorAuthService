@@ -4,12 +4,7 @@ using MediatR;
 
 namespace MediatorAuthService.Application.Cqrs.Commands.UserCommands;
 
-public class DeleteUserCommand : IRequest<ApiResponse<NoDataDto>>
+public class DeleteUserCommand(Guid id) : IRequest<ApiResponse<NoDataDto>>
 {
-    public Guid Id { get; private set; }
-
-    public DeleteUserCommand(Guid id)
-    {
-        Id = id;
-    }
+    public Guid Id { get; private set; } = id;
 }

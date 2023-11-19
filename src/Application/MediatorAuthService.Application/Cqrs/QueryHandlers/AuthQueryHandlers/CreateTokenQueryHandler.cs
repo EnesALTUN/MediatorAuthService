@@ -13,27 +13,14 @@ using System.Net;
 
 namespace MediatorAuthService.Application.Cqrs.QueryHandlers.AuthQueryHandlers;
 
-public class CreateTokenQueryHandler : IRequestHandler<CreateTokenQuery, ApiResponse<TokenDto>>
+public class CreateTokenQueryHandler(IUnitOfWork _unitOfWork, IMediator _mediator, IMapper _mapper) : IRequestHandler<CreateTokenQuery, ApiResponse<TokenDto>>
 {
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly IMediator _mediator;
-    private readonly IMapper _mapper;
-
-    public CreateTokenQueryHandler(IUnitOfWork unitOfWork, IMediator mediator, IMapper mapper)
-    {
-        _unitOfWork = unitOfWork;
-        _mediator = mediator;
-        _mapper = mapper;
-    }
-
     public async Task<ApiResponse<TokenDto>> Handle(CreateTokenQuery request, CancellationToken cancellationToken)
     {
         User? existUser = await _unitOfWork.GetRepository<User>()
             .Where(x => x.Email.Equals(request.Email))
-            .SingleOrDefaultAsync(cancellationToken);
-
-        if (existUser is null)
-            throw new ValidationException("User is not found.");
+            .SingleOrDefaultAsync(cancellationToken) 
+          ?? throw new ValidationException("User is not found.");
 
         if (!existUser.IsActive)
             throw new ValidationException("The user is inactive in the system.");

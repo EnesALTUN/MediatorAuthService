@@ -19,7 +19,7 @@ public interface IUnitOfWork : IAsyncDisposable
     Task RollBackAsync(CancellationToken cancellationToken);
 }
 
-public interface IUnitOfWork<TContext> : IUnitOfWork where TContext : DbContext
+public interface IUnitOfWork<out TContext> : IUnitOfWork where TContext : DbContext
 {
     TContext Context { get; }
 }
