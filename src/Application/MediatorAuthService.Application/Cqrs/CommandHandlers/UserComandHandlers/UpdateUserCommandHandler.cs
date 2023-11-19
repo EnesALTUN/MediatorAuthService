@@ -19,32 +19,19 @@ namespace MediatorAuthService.Application.Cqrs.CommandHandlers.UserComandHandler
 /// - If the user's old password and full password are sent, the old password in the request is compared with the user password in the system.
 ///     If the comparison result is successful, the new password from the request is assigned to the user; if unsuccessful, an error is returned to the user.
 /// </summary>
-public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, ApiResponse<UserDto>>
+public class UpdateUserCommandHandler(IUnitOfWork _unitOfWork, IMapper _mapper) : IRequestHandler<UpdateUserCommand, ApiResponse<UserDto>>
 {
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly IMapper _mapper;
-
-    public UpdateUserCommandHandler(IUnitOfWork unitOfWork, IMapper mapper)
-    {
-        _unitOfWork = unitOfWork;
-        _mapper = mapper;
-    }
-
     public async Task<ApiResponse<UserDto>> Handle(UpdateUserCommand request, CancellationToken cancellationToken)
     {
-        User? existUser = await _unitOfWork.GetRepository<User>().GetByIdAsync(request.Id, cancellationToken);
-
-        if (existUser is null)
-            throw new ValidationException("User is not found.");
+        User? existUser = await _unitOfWork.GetRepository<User>().GetByIdAsync(request.Id, cancellationToken) 
+            ?? throw new ValidationException("User is not found.");
 
         if (!await ExistingEMailControlInEMailExchange(existUser.Email, request.Email, cancellationToken))
             throw new BusinessException("The entered e-mail address is used.");
 
         request.Password = string.IsNullOrEmpty(request.OldPassword) || string.IsNullOrEmpty(request.Password)
             ? existUser.Password
-            : HashingManager.VerifyHashedValue(existUser.Password, request.OldPassword)
-                ? HashingManager.HashValue(request.Password)
-                : throw new ValidationException("Your password does not match.");
+            : ChangePasswordProcess(existUser.Password, request.OldPassword, request.Password);
 
         _mapper.Map(request, existUser);
 
@@ -66,5 +53,12 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, ApiRe
             return true;
 
         return !await _unitOfWork.GetRepository<User>().AnyAsync(user => user.Email.Equals(newEmail), cancellationToken);
+    }
+
+    private static string ChangePasswordProcess(string orjPassword, string oldPassword, string newPassword)
+    {
+        return HashingManager.VerifyHashedValue(orjPassword, oldPassword)
+                ? HashingManager.HashValue(newPassword)
+                : throw new ValidationException("Your password does not match.");
     }
 }

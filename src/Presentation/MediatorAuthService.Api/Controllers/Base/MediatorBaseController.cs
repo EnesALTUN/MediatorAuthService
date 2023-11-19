@@ -17,13 +17,13 @@ public class MediatorBaseController : ControllerBase
     /// <returns></returns>
     public IActionResult ActionResultInstance<TData>(ApiResponse<TData> response) where TData : class
     {
-        List<int> allowedHttpStatusReturnCodes = new() {
+        List<int> allowedHttpStatusReturnCodes = [
             (int)HttpStatusCode.OK,
             (int)HttpStatusCode.Created,
             (int)HttpStatusCode.NoContent,
             (int)HttpStatusCode.BadRequest,
             (int)HttpStatusCode.NotFound
-        };
+        ];
 
         return new ObjectResult(response)
         {

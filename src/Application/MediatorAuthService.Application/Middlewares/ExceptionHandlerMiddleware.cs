@@ -8,16 +8,10 @@ using System.Text.Json;
 
 namespace MediatorAuthService.Application.Middlewares;
 
-public class ExceptionHandlerMiddleware
+public class ExceptionHandlerMiddleware(RequestDelegate next, ILogger<ExceptionHandlerMiddleware> logger)
 {
-    private readonly RequestDelegate _next;
-    private readonly ILogger<ExceptionHandlerMiddleware> _logger;
-
-    public ExceptionHandlerMiddleware(RequestDelegate next, ILogger<ExceptionHandlerMiddleware> logger)
-    {
-        _next = next;
-        _logger = logger;
-    }
+    private readonly RequestDelegate _next = next;
+    private readonly ILogger<ExceptionHandlerMiddleware> _logger = logger;
 
     public async Task Invoke(HttpContext httpContext)
     {
@@ -35,7 +29,7 @@ public class ExceptionHandlerMiddleware
 
             List<string> errors = ex.Errors.Any()
                 ? ex.Errors.Select(x => x.ToString()).ToList()
-                : new List<string> { ex.Message };
+                : [ex.Message];
 
             string result = JsonSerializer.Serialize(new ApiResponse<string>()
             {
@@ -56,7 +50,7 @@ public class ExceptionHandlerMiddleware
 
             string result = JsonSerializer.Serialize(new ApiResponse<string>()
             {
-                Errors = new List<string> { ex.Message },
+                Errors = [ex.Message],
                 IsSuccessful = false,
                 StatusCode = response.StatusCode,
             }, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
@@ -72,7 +66,7 @@ public class ExceptionHandlerMiddleware
 
             string result = JsonSerializer.Serialize(new ApiResponse<string>()
             {
-                Errors = new List<string> { "Sorry, you do not have the necessary permissions to take the relevant action." },
+                Errors = ["Sorry, you do not have the necessary permissions to take the relevant action."],
                 IsSuccessful = false,
                 StatusCode = (int)HttpStatusCode.Forbidden
             }, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });

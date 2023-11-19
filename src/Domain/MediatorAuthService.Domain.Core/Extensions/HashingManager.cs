@@ -8,8 +8,8 @@ public static class HashingManager
     {
         byte[] salt;
         byte[] buffer2;
-        if (value is null)
-            throw new ArgumentNullException(nameof(value));
+
+        ArgumentNullException.ThrowIfNull(value);
 
         using (Rfc2898DeriveBytes bytes = new(value, 0x10, 0x3e8))
         {
@@ -27,8 +27,7 @@ public static class HashingManager
         byte[] buffer4;
         if (hashedValue is null) return false;
 
-        if (value is null)
-            throw new ArgumentNullException(nameof(value));
+        ArgumentNullException.ThrowIfNull(value);
 
         byte[] src = Convert.FromBase64String(hashedValue);
 

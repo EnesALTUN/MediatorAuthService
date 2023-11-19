@@ -13,26 +13,15 @@ using System.Net;
 
 namespace MediatorAuthService.Application.Cqrs.QueryHandlers.UserQueryHandlers;
 
-public class GetUserByEmailQueryHandler : IRequestHandler<GetUserByEmailQuery, ApiResponse<UserDto>>
+public class GetUserByEmailQueryHandler(IUnitOfWork<AppDbContext> _unitOfWork, IMapper _mapper) : IRequestHandler<GetUserByEmailQuery, ApiResponse<UserDto>>
 {
-    private readonly IUnitOfWork<AppDbContext> _unitOfWork;
-    private readonly IMapper _mapper;
-
-    public GetUserByEmailQueryHandler(IUnitOfWork<AppDbContext> unitOfWork, IMapper mapper)
-    {
-        _unitOfWork = unitOfWork;
-        _mapper = mapper;
-    }
-
     public async Task<ApiResponse<UserDto>> Handle(GetUserByEmailQuery request, CancellationToken cancellationToken)
     {
         UserDto? user = await _unitOfWork.GetRepository<User>()
             .Where(x => x.Email.Equals(request.Email))
             .ProjectTo<UserDto>(_mapper.ConfigurationProvider)
-            .SingleOrDefaultAsync(cancellationToken);
-
-        if (user is null)
-            throw new ValidationException("User is not found.");
+            .SingleOrDefaultAsync(cancellationToken) 
+          ?? throw new ValidationException("User is not found.");
 
         return new ApiResponse<UserDto>
         {

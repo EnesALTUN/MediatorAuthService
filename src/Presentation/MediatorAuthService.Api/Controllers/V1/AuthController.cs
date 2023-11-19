@@ -13,20 +13,14 @@ namespace MediatorAuthService.Api.Controllers.V1
     /// <summary>
     /// Authorization - Authentication
     /// </summary>
+    /// <remarks></remarks>
+    /// <param name="_mediator"></param>
     [ApiController]
     [ApiVersion("1.0")]
     [Route("api/v{version:apiVersion}/[controller]")]
     [ProducesResponseType(typeof(ApiResponse<object>), (int)HttpStatusCode.BadRequest)]
-    public class AuthController : MediatorBaseController
+    public class AuthController(IMediator _mediator) : MediatorBaseController
     {
-        private readonly IMediator _mediator;
-
-        /// <summary></summary>
-        /// <param name="mediator"></param>
-        public AuthController(IMediator mediator)
-        {
-            _mediator = mediator;
-        }
 
         /// <summary>
         /// Login

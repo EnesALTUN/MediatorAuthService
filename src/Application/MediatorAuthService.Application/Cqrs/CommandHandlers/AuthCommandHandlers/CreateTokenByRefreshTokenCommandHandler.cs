@@ -21,31 +21,16 @@ namespace MediatorAuthService.Application.Cqrs.CommandHandlers.AuthCommandHandle
 /// If a matching record is found, new token information is generated and returned and the user's refresh token information is updated.
 /// If no matching record is found, an error is returned.
 /// </summary>
-public class CreateTokenByRefreshTokenCommandHandler : IRequestHandler<CreateTokenByRefreshTokenCommand, ApiResponse<TokenDto>>
+public class CreateTokenByRefreshTokenCommandHandler(IUnitOfWork _unitOfWork, IMapper _mapper, IMediator _mediator, IHttpContextAccessor _httpContextAccessor) : IRequestHandler<CreateTokenByRefreshTokenCommand, ApiResponse<TokenDto>>
 {
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly IMapper _mapper;
-    private readonly IMediator _mediator;
-    private readonly IHttpContextAccessor _httpContextAccessor;
-
-    public CreateTokenByRefreshTokenCommandHandler(IUnitOfWork unitOfWork, IMapper mapper, IMediator mediator, IHttpContextAccessor httpContextAccessor)
-    {
-        _unitOfWork = unitOfWork;
-        _mapper = mapper;
-        _mediator = mediator;
-        _httpContextAccessor = httpContextAccessor;
-    }
-
     public async Task<ApiResponse<TokenDto>> Handle(CreateTokenByRefreshTokenCommand request, CancellationToken cancellationToken)
     {
         Guid userId = _httpContextAccessor.HttpContext!.User.Id();
 
         User? existUser = await _unitOfWork.GetRepository<User>()
             .Where(user => user.Id.Equals(userId) && user.RefreshToken.Equals(request.RefreshToken) && user.IsActive)
-            .SingleOrDefaultAsync(cancellationToken);
-
-        if (existUser is null)
-            throw new ValidationException("User or refresh token not found.");
+            .SingleOrDefaultAsync(cancellationToken) 
+          ?? throw new ValidationException("User or refresh token not found.");
 
         UserDto userDto = _mapper.Map<UserDto>(existUser);
 

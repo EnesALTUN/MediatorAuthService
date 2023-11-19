@@ -14,7 +14,7 @@ public class ValidationBehaviour<TRequest, TResponse> : IPipelineBehavior<TReque
         _validators = validators;
     }
 
-    public Task<TResponse> Handle(TRequest request, CancellationToken cancellationToken, RequestHandlerDelegate<TResponse> next)
+    public Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
     {
         ValidationContext<TRequest> context = new(request);
         List<ValidationFailure> failures = _validators.Select(x => x.Validate(context))
@@ -22,7 +22,7 @@ public class ValidationBehaviour<TRequest, TResponse> : IPipelineBehavior<TReque
                                   .Where(x => x != null)
                                   .ToList();
 
-        if (failures.Any())
+        if (failures.Count != 0)
             throw new ValidationException(failures);
 
         return next();

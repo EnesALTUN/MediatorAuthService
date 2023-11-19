@@ -18,13 +18,13 @@ internal static class OrderByQueryableExtensions
 
         MemberExpression selector = Expression.PropertyOrField(parameter, orderKey);
 
-        String method = string.Equals(orderType, "descending", StringComparison.OrdinalIgnoreCase)
+        string method = string.Equals(orderType, "descending", StringComparison.OrdinalIgnoreCase)
              ? "OrderByDescending" : "OrderBy";
 
         expression = Expression.Call(
             typeof(Queryable), 
             method,
-            new Type[] { source.ElementType, selector.Type },
+            [source.ElementType, selector.Type],
             expression,
             Expression.Quote(Expression.Lambda(selector, parameter)));
 

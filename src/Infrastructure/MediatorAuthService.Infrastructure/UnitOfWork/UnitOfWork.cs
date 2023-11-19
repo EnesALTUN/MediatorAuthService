@@ -7,18 +7,11 @@ using Microsoft.EntityFrameworkCore.Storage;
 
 namespace MediatorAuthService.Infrastructure.UnitOfWork;
 
-public class UnitOfWork<TContext> : IUnitOfWork<TContext> where TContext : DbContext
+public class UnitOfWork<TContext>(TContext _context, IMapper _mapper) : IUnitOfWork<TContext> where TContext : DbContext
 {
     private Dictionary<Type, object>? _repositories = null;
-    private readonly IMapper _mapper;
 
-    public TContext Context { get; }
-
-    public UnitOfWork(TContext context, IMapper mapper)
-    {
-        Context = context ?? throw new ArgumentNullException(nameof(context));
-        _mapper = mapper;
-    }
+    public TContext Context { get; } = _context ?? throw new ArgumentNullException(nameof(_context));
 
     public IGenericRepository<TEntity> GetRepository<TEntity>() where TEntity : BaseEntity, IEntity
     {
@@ -27,7 +20,7 @@ public class UnitOfWork<TContext> : IUnitOfWork<TContext> where TContext : DbCon
 
     internal object GetOrAddRepository(Type type, object repo)
     {
-        _repositories ??= new Dictionary<Type, object>();
+        _repositories ??= [];
 
         if (_repositories.TryGetValue(type, out var repository))
             return repository;
@@ -61,8 +54,7 @@ public class UnitOfWork<TContext> : IUnitOfWork<TContext> where TContext : DbCon
     {
         if (disposing)
         {
-            if (_repositories != null)
-                _repositories.Clear();
+            _repositories?.Clear();
 
             await Context.DisposeAsync();
         }

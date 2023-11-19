@@ -14,21 +14,12 @@ namespace MediatorAuthService.Application.Cqrs.CommandHandlers.UserComandHandler
 ///     - If the sent user ID exists in the system, the user is deleted.
 ///     - If the sent user ID is not found in the system, an error is returned.
 /// </summary>
-public class DeleteUserCommandHandler : IRequestHandler<DeleteUserCommand, ApiResponse<NoDataDto>>
+public class DeleteUserCommandHandler(IUnitOfWork _unitOfWork) : IRequestHandler<DeleteUserCommand, ApiResponse<NoDataDto>>
 {
-    private readonly IUnitOfWork _unitOfWork;
-
-    public DeleteUserCommandHandler(IUnitOfWork unitOfWork)
-    {
-        _unitOfWork = unitOfWork;
-    }
-
     public async Task<ApiResponse<NoDataDto>> Handle(DeleteUserCommand request, CancellationToken cancellationToken)
     {
-        User? existUser = await _unitOfWork.GetRepository<User>().GetByIdAsync(request.Id, cancellationToken);
-
-        if (existUser is null)
-            throw new ValidationException("User is not found.");
+        User? existUser = await _unitOfWork.GetRepository<User>().GetByIdAsync(request.Id, cancellationToken) 
+            ?? throw new ValidationException("User is not found.");
 
         _unitOfWork.GetRepository<User>().Remove(existUser);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
