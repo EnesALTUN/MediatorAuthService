@@ -28,7 +28,6 @@ WebApplication app = builder.Build();
 
 app.UseCors(cors => cors.AllowAnyHeader()
                         .AllowAnyOrigin()
-                        .AllowCredentials()
 );
 
 app.ApplyMigration();
