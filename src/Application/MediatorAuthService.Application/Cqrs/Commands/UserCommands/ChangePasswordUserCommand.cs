@@ -4,7 +4,7 @@ using MediatR;
 
 namespace MediatorAuthService.Application.Cqrs.Commands.UserCommands;
 
-public class ChangePasswordUserCommand(string oldPassword, string newPassword) : IRequest<ApiResponse<NoDataDto>>
+public class ChangePasswordUserCommand(string oldPassword, string newPassword) : IRequest<ApiResponse<INoData>>
 {
     public string OldPassword { get; set; } = oldPassword;
 

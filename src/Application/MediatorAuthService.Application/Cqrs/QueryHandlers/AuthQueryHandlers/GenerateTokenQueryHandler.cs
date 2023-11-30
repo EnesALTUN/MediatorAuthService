@@ -37,7 +37,7 @@ internal class GenerateTokenQueryHandler(IOptions<MediatorTokenOptions> tokenOpt
 
         TokenDto tokenDto = new()
         {
-            AccessToken = token,
+            AccessToken = $"Bearer {token}",
             RefreshToken = HashingManager.HashValue(Guid.NewGuid().ToString()),
             AccessTokenExpire = accessTokenExpiration,
             RefreshTokenExpire = refreshTokenExpiration

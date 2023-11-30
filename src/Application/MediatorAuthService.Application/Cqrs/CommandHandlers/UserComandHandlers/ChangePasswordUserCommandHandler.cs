@@ -20,13 +20,13 @@ namespace MediatorAuthService.Application.Cqrs.CommandHandlers.UserComandHandler
 ///     - If the passwords match, the new password from the request is assigned to the user.
 /// - If no matching record is found, an error is returned.
 /// </summary>
-public class ChangePasswordUserCommandHandler(IUnitOfWork _unitOfWork, IHttpContextAccessor _httpContextAccessor) : IRequestHandler<ChangePasswordUserCommand, ApiResponse<NoDataDto>>
+public class ChangePasswordUserCommandHandler(IUnitOfWork _unitOfWork, IHttpContextAccessor _httpContextAccessor) : IRequestHandler<ChangePasswordUserCommand, ApiResponse<INoData>>
 {
-    public async Task<ApiResponse<NoDataDto>> Handle(ChangePasswordUserCommand request, CancellationToken cancellationToken)
+    public async Task<ApiResponse<INoData>> Handle(ChangePasswordUserCommand request, CancellationToken cancellationToken)
     {
         Guid userId = _httpContextAccessor.HttpContext!.User.Id();
 
-        User? existUser = await _unitOfWork.GetRepository<User>()
+        User existUser = await _unitOfWork.GetRepository<User>()
             .Where(user => user.Id.Equals(userId) && user.IsActive)
             .SingleOrDefaultAsync(cancellationToken) 
           ?? throw new ValidationException("User email or password wrong.");
@@ -39,7 +39,7 @@ public class ChangePasswordUserCommandHandler(IUnitOfWork _unitOfWork, IHttpCont
         existUser.Password = hashedNewPassword;
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return new ApiResponse<NoDataDto>
+        return new ApiResponse<INoData>
         {
             StatusCode = (int)HttpStatusCode.NoContent
         };
