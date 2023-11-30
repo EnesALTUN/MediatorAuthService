@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using MediatorAuthService.Application.Dtos.ResponseDtos;
 using MediatorAuthService.Application.Exceptions;
 using MediatorAuthService.Application.Wrappers;
 using Microsoft.AspNetCore.Http;
@@ -15,6 +16,9 @@ public class ExceptionHandlerMiddleware(RequestDelegate next, ILogger<ExceptionH
 
     public async Task Invoke(HttpContext httpContext)
     {
+        JsonSerializerOptions jsonOption = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+        string responseContentType = "application/json";
+
         try
         {
             await _next.Invoke(httpContext);
@@ -24,19 +28,19 @@ public class ExceptionHandlerMiddleware(RequestDelegate next, ILogger<ExceptionH
             _logger.LogError(ex.Message);
 
             HttpResponse response = httpContext.Response;
-            response.ContentType = "application/json";
+            response.ContentType = responseContentType;
             response.StatusCode = (int)HttpStatusCode.BadRequest;
 
             List<string> errors = ex.Errors.Any()
                 ? ex.Errors.Select(x => x.ToString()).ToList()
                 : [ex.Message];
 
-            string result = JsonSerializer.Serialize(new ApiResponse<string>()
+            string result = JsonSerializer.Serialize(new ApiResponse<INoData>()
             {
                 Errors = errors,
                 IsSuccessful = false,
                 StatusCode = response.StatusCode
-            }, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+            }, jsonOption);
 
             await response.WriteAsync(result);
         }
@@ -45,15 +49,15 @@ public class ExceptionHandlerMiddleware(RequestDelegate next, ILogger<ExceptionH
             _logger.LogError(ex.Message);
 
             HttpResponse response = httpContext.Response;
-            response.ContentType = "application/json";
+            response.ContentType = responseContentType;
             response.StatusCode = Convert.ToInt16(ex.HttpStatusCode ?? HttpStatusCode.BadRequest);
 
-            string result = JsonSerializer.Serialize(new ApiResponse<string>()
+            string result = JsonSerializer.Serialize(new ApiResponse<INoData>()
             {
                 Errors = [ex.Message],
                 IsSuccessful = false,
                 StatusCode = response.StatusCode,
-            }, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+            }, jsonOption);
 
             await response.WriteAsync(result);
         }
@@ -62,14 +66,14 @@ public class ExceptionHandlerMiddleware(RequestDelegate next, ILogger<ExceptionH
             _logger.LogError(ex.Message);
 
             HttpResponse response = httpContext.Response;
-            response.ContentType = "application/json";
+            response.ContentType = responseContentType;
 
-            string result = JsonSerializer.Serialize(new ApiResponse<string>()
+            string result = JsonSerializer.Serialize(new ApiResponse<INoData>()
             {
                 Errors = ["Sorry, you do not have the necessary permissions to take the relevant action."],
                 IsSuccessful = false,
                 StatusCode = (int)HttpStatusCode.Forbidden
-            }, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+            }, jsonOption);
 
             await response.WriteAsync(result);
         }

@@ -101,10 +101,10 @@ namespace MediatorAuthService.Api.Controllers.V1
         /// <param name="id"></param>
         /// <returns>Deletes the registered user from the system.</returns>
         [HttpDelete("{id:Guid}")]
-        [ProducesResponseType(typeof(ApiResponse<NoDataDto>), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(ApiResponse<INoData>), (int)HttpStatusCode.OK)]
         public async Task<IActionResult> DeleteUser(Guid id)
         {
-            ApiResponse<NoDataDto> response = await _mediator.Send(new DeleteUserCommand(id));
+            ApiResponse<INoData> response = await _mediator.Send(new DeleteUserCommand(id));
 
             return ActionResultInstance(response);
         }
@@ -115,10 +115,10 @@ namespace MediatorAuthService.Api.Controllers.V1
         /// <param name="request"></param>
         /// <returns>Updates the registered user's password.</returns>
         [HttpPost("change-password")]
-        [ProducesResponseType(typeof(ApiResponse<NoDataDto>), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(ApiResponse<INoData>), (int)HttpStatusCode.OK)]
         public async Task<IActionResult> ChangePassword(ChangePasswordUserCommand request)
         {
-            ApiResponse<NoDataDto> response = await _mediator.Send(request);
+            ApiResponse<INoData> response = await _mediator.Send(request);
 
             return ActionResultInstance(response);
         }

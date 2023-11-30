@@ -26,6 +26,11 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
 
 WebApplication app = builder.Build();
 
+app.UseCors(cors => cors.AllowAnyHeader()
+                        .AllowAnyOrigin()
+                        .AllowCredentials()
+);
+
 app.ApplyMigration();
 
 if (app.Environment.IsDevelopment())

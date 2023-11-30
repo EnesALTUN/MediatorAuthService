@@ -27,7 +27,7 @@ public class MediatorBaseController : ControllerBase
 
         return new ObjectResult(response)
         {
-            StatusCode = allowedHttpStatusReturnCodes.Any(allowedHttpStatusReturnCode => allowedHttpStatusReturnCode.Equals(response.StatusCode))
+            StatusCode = allowedHttpStatusReturnCodes.Exists(allowedHttpStatusReturnCode => allowedHttpStatusReturnCode.Equals(response.StatusCode))
                 ? response.StatusCode
                 : (int)HttpStatusCode.Forbidden
         };
