@@ -1,6 +1,6 @@
 ﻿using System.Security.Claims;
 
-namespace MediatorAuthService.Application.Extensions
+namespace MediatorAuthService.Domain.Core.Extensions
 {
     public static class UserContextExtensions
     {
@@ -32,9 +32,6 @@ namespace MediatorAuthService.Application.Extensions
             return surname;
         }
 
-        public static string FullName(this ClaimsPrincipal claimsPrincipal)
-        {
-            return $"{Name} {SurName}";
-        }
+        public static string FullName(this ClaimsPrincipal _) => $"{Name} {SurName}";
     }
 }

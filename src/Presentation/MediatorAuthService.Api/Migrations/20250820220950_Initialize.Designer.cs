@@ -12,17 +12,18 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MediatorAuthService.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20221211193227_initialize")]
-    partial class initialize
+    [Migration("20250820220950_Initialize")]
+    partial class Initialize
     {
+        /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "6.0.8")
+                .HasAnnotation("ProductVersion", "9.0.8")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
-            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder, 1L, 1);
+            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
             modelBuilder.Entity("MediatorAuthService.Domain.Entities.User", b =>
                 {
@@ -77,20 +78,6 @@ namespace MediatorAuthService.Api.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Users");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("d0bfa391-a604-4049-a868-359091461e46"),
-                            CreatedDate = new DateTime(2022, 12, 11, 19, 32, 27, 619, DateTimeKind.Utc).AddTicks(3872),
-                            CreatedUserId = new Guid("d0bfa391-a604-4049-a868-359091461e46"),
-                            Email = "admin@gmail.com",
-                            IsActive = true,
-                            Name = "Admin",
-                            Password = "AJP3f/ZqBr+xHwFkTPBkwVO+BgcrDmRe5l5lgSzKy993YYd01unheSSpwWbeaCyLFg==",
-                            RefreshToken = "ACE4OSv8s/cKB7sTd3dbjDBDGtuF9H1g/padyLEz9HZ2zIvS6wMC97ddpbxUGPb0QQ==",
-                            Surname = "Admin"
-                        });
                 });
 #pragma warning restore 612, 618
         }

@@ -9,8 +9,7 @@ using Swashbuckle.AspNetCore.SwaggerGen;
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 builder.Configuration
-    .AddEnvironmentVariables()
-    .Build();
+    .AddEnvironmentVariables();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -51,4 +50,4 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.Run();
+await app.RunAsync();

@@ -59,7 +59,7 @@ public class ConfigureSwaggerOptions(IApiVersionDescriptionProvider provider) : 
     /// </summary>
     /// <param name="name"></param>
     /// <param name="options"></param>
-    public void Configure(string name, SwaggerGenOptions options) => Configure(options);
+    public void Configure(string? name, SwaggerGenOptions options) => Configure(options);
 
     /// <summary>
     /// Create information about the version of the API
@@ -95,8 +95,8 @@ public static class AddSwaggerUIExtension
         {
             IApiVersionDescriptionProvider apiVersionDescriptionProvider = webApp.Services.GetRequiredService<IApiVersionDescriptionProvider>();
 
-            foreach (ApiVersionDescription description in apiVersionDescriptionProvider.ApiVersionDescriptions)
-                c.SwaggerEndpoint($"/swagger/{description.GroupName}/swagger.json", description.GroupName.ToUpperInvariant());
+            foreach (string groupName in apiVersionDescriptionProvider.ApiVersionDescriptions.Select(description => description.GroupName))
+                c.SwaggerEndpoint($"/swagger/{groupName}/swagger.json", groupName.ToUpperInvariant());
         });
     }
 }

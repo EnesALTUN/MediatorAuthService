@@ -25,7 +25,8 @@ public static class DependencyInjection
 
         services.Configure<MediatorTokenOptions>(configuration.GetSection("JwtTokenOption"));
 
-        MediatorTokenOptions tokenOption = configuration.GetSection("JwtTokenOption").Get<MediatorTokenOptions>();
+        MediatorTokenOptions? tokenOption = configuration.GetSection("JwtTokenOption").Get<MediatorTokenOptions>() ?? throw new InvalidOperationException("JwtTokenOption section is missing or invalid in configuration.");
+        
         services.AddMediatorJwtAuth(tokenOption);
 
         return services;

@@ -5,8 +5,8 @@ using MediatorAuthService.Application.Cqrs.Queries.AuthQueries;
 using MediatorAuthService.Application.Dtos.AuthDtos;
 using MediatorAuthService.Application.Dtos.UserDtos;
 using MediatorAuthService.Application.Exceptions;
-using MediatorAuthService.Application.Extensions;
 using MediatorAuthService.Application.Wrappers;
+using MediatorAuthService.Domain.Core.Extensions;
 using MediatorAuthService.Domain.Entities;
 using MediatorAuthService.Infrastructure.UnitOfWork;
 using MediatR;
@@ -29,7 +29,7 @@ public class CreateTokenByRefreshTokenCommandHandler(IUnitOfWork _unitOfWork, IM
 
         User? existUser = await _unitOfWork.GetRepository<User>()
             .Where(user => user.Id.Equals(userId) && user.RefreshToken.Equals(request.RefreshToken) && user.IsActive)
-            .SingleOrDefaultAsync(cancellationToken) 
+            .SingleOrDefaultAsync(cancellationToken)
           ?? throw new ValidationException("User or refresh token not found.");
 
         UserDto userDto = _mapper.Map<UserDto>(existUser);
