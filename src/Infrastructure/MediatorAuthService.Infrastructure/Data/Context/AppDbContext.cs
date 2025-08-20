@@ -1,5 +1,5 @@
-﻿using MediatorAuthService.Application.Extensions;
-using MediatorAuthService.Domain.Core.Base.Concrete;
+﻿using MediatorAuthService.Domain.Core.Base.Concrete;
+using MediatorAuthService.Domain.Core.Extensions;
 using MediatorAuthService.Domain.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -15,7 +15,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> _options, IHttpContextA
 
     public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
     {
-        Guid currentUserId = _httpContextAccessor.HttpContext.User.Id();
+        Guid currentUserId = _httpContextAccessor.HttpContext?.User?.Id() ?? Guid.Empty;
 
         ChangeTracker.Entries().ToList().ForEach(e =>
         {

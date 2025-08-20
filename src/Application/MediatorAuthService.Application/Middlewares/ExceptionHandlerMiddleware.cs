@@ -25,14 +25,14 @@ public class ExceptionHandlerMiddleware(RequestDelegate next, ILogger<ExceptionH
         }
         catch (ValidationException ex)
         {
-            _logger.LogError(ex.Message);
+            _logger.LogError(ex, "A validation exception occurred.");
 
             HttpResponse response = httpContext.Response;
             response.ContentType = responseContentType;
             response.StatusCode = (int)HttpStatusCode.BadRequest;
 
             List<string> errors = ex.Errors.Any()
-                ? ex.Errors.Select(x => x.ToString()).ToList()
+                ? [.. ex.Errors.Select(x => x.ToString())]
                 : [ex.Message];
 
             string result = JsonSerializer.Serialize(new ApiResponse<INoData>()
@@ -46,7 +46,7 @@ public class ExceptionHandlerMiddleware(RequestDelegate next, ILogger<ExceptionH
         }
         catch (BusinessException ex)
         {
-            _logger.LogError(ex.Message);
+            _logger.LogError(ex, "A business exception occurred.");
 
             HttpResponse response = httpContext.Response;
             response.ContentType = responseContentType;
@@ -63,7 +63,7 @@ public class ExceptionHandlerMiddleware(RequestDelegate next, ILogger<ExceptionH
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex.Message);
+            _logger.LogError(ex, "An unhandled exception occurred.");
 
             HttpResponse response = httpContext.Response;
             response.ContentType = responseContentType;

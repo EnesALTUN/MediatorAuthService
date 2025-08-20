@@ -5,8 +5,10 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace MediatorAuthService.Api.Migrations
 {
-    public partial class initialize : Migration
+    /// <inheritdoc />
+    public partial class Initialize : Migration
     {
+        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
@@ -31,13 +33,9 @@ namespace MediatorAuthService.Api.Migrations
                 {
                     table.PrimaryKey("PK_Users", x => x.Id);
                 });
-
-            migrationBuilder.InsertData(
-                table: "Users",
-                columns: new[] { "Id", "CreatedDate", "CreatedUserId", "DeletedDate", "DeletedUserId", "Email", "IsActive", "ModifiedDate", "ModifiedUserId", "Name", "Password", "RefreshToken", "Surname" },
-                values: new object[] { new Guid("d0bfa391-a604-4049-a868-359091461e46"), new DateTime(2022, 12, 11, 19, 32, 27, 619, DateTimeKind.Utc).AddTicks(3872), new Guid("d0bfa391-a604-4049-a868-359091461e46"), null, null, "admin@gmail.com", true, null, null, "Admin", "AJP3f/ZqBr+xHwFkTPBkwVO+BgcrDmRe5l5lgSzKy993YYd01unheSSpwWbeaCyLFg==", "ACE4OSv8s/cKB7sTd3dbjDBDGtuF9H1g/padyLEz9HZ2zIvS6wMC97ddpbxUGPb0QQ==", "Admin" });
         }
 
+        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(

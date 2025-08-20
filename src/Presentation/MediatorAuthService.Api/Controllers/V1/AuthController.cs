@@ -2,6 +2,7 @@
 using MediatorAuthService.Application.Cqrs.Commands.AuthCommands;
 using MediatorAuthService.Application.Cqrs.Queries.AuthQueries;
 using MediatorAuthService.Application.Dtos.AuthDtos;
+using MediatorAuthService.Application.Dtos.ResponseDtos;
 using MediatorAuthService.Application.Wrappers;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -18,7 +19,7 @@ namespace MediatorAuthService.Api.Controllers.V1
     [ApiController]
     [ApiVersion("1.0")]
     [Route("api/v{version:apiVersion}/[controller]")]
-    [ProducesResponseType(typeof(ApiResponse<object>), (int)HttpStatusCode.BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<INoData>), (int)HttpStatusCode.BadRequest)]
     public class AuthController(IMediator _mediator) : MediatorBaseController
     {
 

@@ -6,11 +6,11 @@ namespace MediatorAuthService.Application.Cqrs.Commands.UserCommands;
 
 public class CreateUserCommand : IRequest<ApiResponse<UserDto>>
 {
-    public string Name { get; set; }
+    public required string Name { get; set; }
 
-    public string Surname { get; set; }
+    public required string Surname { get; set; }
 
-    public string Email { get; set; }
+    public required string Email { get; set; }
 
-    public string Password { get; set; }
+    public required string Password { get; set; }
 }
