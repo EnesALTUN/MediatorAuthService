@@ -15,14 +15,17 @@ public static class DependencyInjection
     {
         Assembly assembly = Assembly.GetExecutingAssembly();
 
-        services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(assembly));
+        services.AddMediatR(cfg =>
+        {
+            cfg.RegisterServicesFromAssembly(assembly);
+            cfg.LicenseKey = configuration["MediatR:LicenseKey"] ?? string.Empty;
+            cfg.AddOpenBehavior(typeof(LoggingBehavior<,>));
+            cfg.AddOpenBehavior(typeof(ValidationBehaviour<,>));
+        });
 
         services.AddAutoMapper(cfg => cfg.AddMaps(assembly));
 
         services.AddValidatorsFromAssembly(assembly);
-
-        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
-        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehaviour<,>));
 
         services.Configure<MediatorTokenOptions>(configuration.GetSection("JwtTokenOption"));
 

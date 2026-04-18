@@ -5,9 +5,10 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:5216
-      - ConnectionStrings:Default=Data Source=s_sqlserver;Initial Catalog=MeditorAuthService;User Id=sa;Password=MediatorAuthService-SqlServer-MaxLevel(!)Password;Integrated Security=False;TrustServerCertificate=True
-      - ElasticSearch:Uri=http://s_elasticsearch:9200
-      - JwtTokenOption:SecurityKey=MediatorAuthService-Super-Secret-Key-2026!
+      - ConnectionStrings:Default=${SQL_CONNECTION_STRING}
+      - ElasticSearch:Uri=${ELASTIC_URI}
+      - JwtTokenOption:SecurityKey=${JWT_SECURITY_KEY}
+      - MediatR:LicenseKey=${MEDIATR_LICENSE_KEY}
     ports:
       - "5216:5216"
       - "7216:7216"
@@ -28,7 +29,7 @@ services:
       - 1453:1433
     environment:
       - ACCEPT_EULA=Y
-      - MSSQL_SA_PASSWORD=MediatorAuthService-SqlServer-MaxLevel(!)Password
+      - MSSQL_SA_PASSWORD=${SQL_PASSWORD}
     volumes:
       - mediator_sqlserver_data:/var/opt/mssql/data
       - mediator_sqlserver_log:/var/opt/mssql/log
@@ -57,7 +58,7 @@ services:
   s_kibana:
     image: docker.elastic.co/kibana/kibana:9.0.0
     environment:
-      - ELASTICSEARCH_HOSTS=http://s_elasticsearch:9200
+      - ELASTICSEARCH_HOSTS=${ELASTIC_URI}
     ports:
       - "5601:5601"
     networks:
