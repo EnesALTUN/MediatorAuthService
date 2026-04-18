@@ -19,33 +19,37 @@ This project is an authentication microservice based on .NET 9.
 ## Installation
 1. Clone the repository:
 2. Restore dependencies:
-3. Initialize User Secrets (run this once if you are using it for the first time to securely store sensitive data in the development environment):
-    ```bash
-    dotnet user-secrets init
-    ```
-4. Set the database connection string securely:
-   - For development, use [User Secrets](https://learn.microsoft.com/en-us/aspnet/core/security/app-secrets) or environment variables.
-    ```bash
-    dotnet user-secrets set "ConnectionStrings:Default" "<CONNECTION_STRING>"
-    ```
-5. Set the JWT SecurityKey:
-   - For development, you can use [User Secrets](https://learn.microsoft.com/en-us/aspnet/core/security/app-secrets).
-    ```bash
-    dotnet user-secrets set "JwtTokenOption:SecurityKey" "<SECURITY_KEY>"
-    ```
-6. Configure environment variables for Docker:
+
+### Option A: Running with Docker (Recommended)
+
+3. Configure environment variables for Docker:
    - Copy `.env.example` to `.env` and fill in the required values:
     ```bash
     cp .env.example .env
     ```
    - Never commit the `.env` file to version control.
 
-7. Start the infrastructure services with Docker:
+4. Start all services with Docker:
     ```bash
     docker compose up -d
     ```
 
-8. Run the application:
+### Option B: Running without Docker
+
+3. Initialize User Secrets (run this once if you are using it for the first time to securely store sensitive data in the development environment):
+    ```bash
+    dotnet user-secrets init --project src/Presentation/MediatorAuthService.Api
+    ```
+4. Set the required secrets:
+    ```bash
+    dotnet user-secrets set "ConnectionStrings:Default" "<CONNECTION_STRING>" --project src/Presentation/MediatorAuthService.Api
+    dotnet user-secrets set "JwtTokenOption:SecurityKey" "<SECURITY_KEY>" --project src/Presentation/MediatorAuthService.Api
+    dotnet user-secrets set "ElasticSearch:Uri" "http://localhost:9200" --project src/Presentation/MediatorAuthService.Api
+    dotnet user-secrets set "MediatR:LicenseKey" "<LICENSE_KEY>" --project src/Presentation/MediatorAuthService.Api
+    ```
+   > For more information, see [User Secrets](https://learn.microsoft.com/en-us/aspnet/core/security/app-secrets).
+
+5. Run the application:
 
 > **Note:** When the application starts for the first time, the database and required tables will be created automatically thanks to the `app.ApplyMigration();` operation. There is no need for an extra migration or manual database creation step.
 
