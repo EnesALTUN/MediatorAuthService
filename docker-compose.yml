@@ -11,3 +11,11 @@ services:
   s_sqlserver:
     container_name: mediator_authservice_sqlserver
     image: mcr.microsoft.com/mssql/server:2019-latest
+
+  s_elasticsearch:
+    container_name: mediator_authservice_elasticsearch
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.0.0 
+
+  s_kibana:
+    container_name: mediator_authservice_kibana
+    image: docker.elastic.co/kibana/kibana:9.0.0

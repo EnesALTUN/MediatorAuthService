@@ -6,14 +6,21 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:5216
       - ConnectionStrings:Default=Data Source=s_sqlserver;Initial Catalog=MeditorAuthService;User Id=sa;Password=MediatorAuthService-SqlServer-MaxLevel(!)Password;Integrated Security=False;TrustServerCertificate=True
+      - ElasticSearch:Uri=http://s_elasticsearch:9200
+      - JwtTokenOption:SecurityKey=MediatorAuthService-Super-Secret-Key-2026!
     ports:
       - "5216:5216"
       - "7216:7216"
     networks:
       - net_backendservices
       - sql_db
+      - elastic_net
     depends_on:
-      - s_sqlserver
+      s_sqlserver:
+        condition: service_started
+      s_elasticsearch:
+        condition: service_healthy
+    restart: on-failure
 
   s_sqlserver:
     user: root
@@ -28,6 +35,37 @@ services:
     networks:
       - sql_db
 
+  s_elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.0.0
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ports:
+      - "9200:9200"
+    volumes:
+      - mediator_elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - elastic_net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  s_kibana:
+    image: docker.elastic.co/kibana/kibana:9.0.0
+    environment:
+      - ELASTICSEARCH_HOSTS=http://s_elasticsearch:9200
+    ports:
+      - "5601:5601"
+    networks:
+      - elastic_net
+    depends_on:
+      s_elasticsearch:
+        condition: service_started
+
 networks:
   net_backendservices:
     driver: bridge
@@ -35,7 +73,10 @@ networks:
   sql_db:
     driver: bridge
     external: true
+  elastic_net:
+    driver: bridge
 
 volumes:
   mediator_sqlserver_data:
   mediator_sqlserver_log:
+  mediator_elasticsearch_data:
