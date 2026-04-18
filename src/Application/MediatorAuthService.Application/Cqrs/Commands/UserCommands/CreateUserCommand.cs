@@ -1,4 +1,5 @@
-﻿using MediatorAuthService.Application.Dtos.UserDtos;
+﻿using MediatorAuthService.Application.Common.Security;
+using MediatorAuthService.Application.Dtos.UserDtos;
 using MediatorAuthService.Application.Wrappers;
 using MediatR;
 
@@ -12,5 +13,6 @@ public class CreateUserCommand : IRequest<ApiResponse<UserDto>>
 
     public required string Email { get; set; }
 
+    [SensitiveData]
     public required string Password { get; set; }
 }

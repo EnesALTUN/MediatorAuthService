@@ -1,4 +1,5 @@
-﻿using MediatorAuthService.Application.Dtos.UserDtos;
+﻿using MediatorAuthService.Application.Common.Security;
+using MediatorAuthService.Application.Dtos.UserDtos;
 using MediatorAuthService.Application.Wrappers;
 using MediatR;
 
@@ -14,7 +15,9 @@ public class UpdateUserCommand : IRequest<ApiResponse<UserDto>>
 
     public required string Email { get; set; }
 
+    [SensitiveData]
     public string? OldPassword { get; set; }
 
+    [SensitiveData]
     public string? Password { get; set; }
 }

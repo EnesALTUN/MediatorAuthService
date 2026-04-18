@@ -17,10 +17,11 @@ public static class DependencyInjection
 
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(assembly));
 
-        services.AddAutoMapper(assembly);
+        services.AddAutoMapper(cfg => cfg.AddMaps(assembly));
 
         services.AddValidatorsFromAssembly(assembly);
 
+        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehaviour<,>));
 
         services.Configure<MediatorTokenOptions>(configuration.GetSection("JwtTokenOption"));
