@@ -49,11 +49,11 @@ services:
     networks:
       - elastic_net
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:9200 || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://localhost:9200/_cluster/health?wait_for_status=yellow&timeout=5s || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 10
-      start_period: 30s
+      start_period: 40s
 
   s_kibana:
     image: docker.elastic.co/kibana/kibana:9.0.0

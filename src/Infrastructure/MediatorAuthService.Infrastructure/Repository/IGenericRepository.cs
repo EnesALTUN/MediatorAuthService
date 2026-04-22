@@ -11,7 +11,11 @@ public interface IGenericRepository<TEntity> where TEntity : IEntity
 
     Task<TDto?> GetByIdWithProjectToAsync<TDto>(Guid id, CancellationToken cancellationToken) where TDto : BaseDto;
 
-    (IQueryable<TEntity>, int) GetAll(PaginationParams paginationParams, bool isNotTracking = true);
+    Task<(IQueryable<TEntity>, int)> GetAllAsync(
+        PaginationParams paginationParams,
+        Expression<Func<TEntity, bool>>? predicate = null,
+        bool isNotTracking = true,
+        CancellationToken cancellationToken = default);
 
     IQueryable<TEntity> Where(Expression<Func<TEntity, bool>> predicate);
 

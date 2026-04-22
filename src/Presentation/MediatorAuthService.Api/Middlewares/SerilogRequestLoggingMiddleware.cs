@@ -1,5 +1,4 @@
 ﻿using Serilog;
-using Serilog.Context;
 
 namespace MediatorAuthService.Api.Middlewares;
 
@@ -17,17 +16,6 @@ public static class SerilogRequestLoggingMiddleware
     /// <returns>The <see cref="IApplicationBuilder"/> instance for method chaining.</returns>
     public static IApplicationBuilder UseSerilogRequestLoggingWithEnrichment(this IApplicationBuilder app)
     {
-        app.Use(async (context, next) =>
-        {
-            var correlationId = context.TraceIdentifier;
-
-            using (LogContext.PushProperty("CorrelationId", correlationId))
-            using (LogContext.PushProperty("UserId", context.User.Identity?.Name))
-            {
-                await next();
-            }
-        });
-
         app.UseSerilogRequestLogging(options =>
         {
             options.MessageTemplate = "HTTP {RequestMethod} {RequestPath} {StatusCode} {Elapsed:0.0000}ms";
@@ -35,7 +23,9 @@ public static class SerilogRequestLoggingMiddleware
             options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
             {
                 diagnosticContext.Set("RequestHost", httpContext.Request.Host.Value);
-                diagnosticContext.Set("UserAgent", httpContext.Request.Headers.UserAgent);
+                diagnosticContext.Set("UserAgent", httpContext.Request.Headers.UserAgent.ToString());
+                diagnosticContext.Set("CorrelationId", httpContext.TraceIdentifier);
+                diagnosticContext.Set("UserId", httpContext.User.Identity?.Name);
             };
         });
 

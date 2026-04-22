@@ -10,7 +10,9 @@ public class UserMappingProfile : Profile
 {
     public UserMappingProfile()
     {
-        CreateMap<User, UserDto>().ReverseMap();
+        CreateMap<UserDto, User>()
+            .ForMember(dest => dest.Password, opt => opt.Ignore())
+            .ReverseMap();
         CreateMap<CreateUserCommand, User>();
         CreateMap<UpdateUserCommand, User>();
         CreateMap<GetUserByIdQuery, User>();

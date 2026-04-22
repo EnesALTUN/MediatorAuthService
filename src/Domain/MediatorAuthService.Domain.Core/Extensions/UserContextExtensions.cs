@@ -32,6 +32,6 @@ namespace MediatorAuthService.Domain.Core.Extensions
             return surname;
         }
 
-        public static string FullName(this ClaimsPrincipal _) => $"{Name} {SurName}";
+        public static string FullName(this ClaimsPrincipal _) => $"{_.Name} {_.SurName}";
     }
 }
