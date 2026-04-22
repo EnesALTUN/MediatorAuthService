@@ -29,11 +29,19 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
 
 WebApplication app = builder.Build();
 
-app.UseSerilogRequestLoggingWithEnrichment();
+app.UseHttpsRedirection();
 
 app.UseCors(cors => cors.AllowAnyHeader()
                         .AllowAnyOrigin()
 );
+
+app.UseAuthentication();
+
+app.UseAuthorization();
+
+app.UseSerilogRequestLoggingWithEnrichment();
+
+app.UseMiddleware<ExceptionHandlerMiddleware>();
 
 app.ApplyMigration();
 
@@ -42,14 +50,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.AddSwaggerUI(app);
 }
-
-app.UseMiddleware<ExceptionHandlerMiddleware>();
-
-app.UseHttpsRedirection();
-
-app.UseAuthentication();
-
-app.UseAuthorization();
 
 app.MapControllers();
 

@@ -14,7 +14,7 @@ public static class DbContextSeedExtensions
             {
                 Id = Guid.Parse("d0bfa391-a604-4049-a868-359091461e46"),
                 Email = "admin@gmail.com",
-                Password = HashingManager.HashValue("qwe123"),
+                Password = HashingManager.HashValue("qwe123ASD!"),
                 Name = "Admin",
                 Surname = "Admin",
                 RefreshToken = HashingManager.HashValue(Guid.NewGuid().ToString())

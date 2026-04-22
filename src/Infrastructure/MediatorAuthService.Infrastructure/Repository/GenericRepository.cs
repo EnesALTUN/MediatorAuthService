@@ -41,24 +41,33 @@ public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEnt
         return record;
     }
 
-    public (IQueryable<TEntity>, int) GetAll(PaginationParams paginationParams, bool isNotTracking = true)
+    public async Task<(IQueryable<TEntity>, int)> GetAllAsync(
+        PaginationParams paginationParams,
+        Expression<Func<TEntity, bool>>? predicate = null,
+        bool isNotTracking = true,
+        CancellationToken cancellationToken = default)
     {
         IQueryable<TEntity> query = _dbSet;
 
         if (isNotTracking)
             query = query.AsNoTracking();
 
-        int count = query.Count();
+        if (predicate is not null)
+            query = query.Where(predicate);
 
-        query = string.IsNullOrEmpty(paginationParams.OrderKey)
+        Task<int> countTask = query.CountAsync(cancellationToken);
+
+        IQueryable<TEntity> pagedQuery = string.IsNullOrEmpty(paginationParams.OrderKey)
             ? query.OrderByDescending(x => x.CreatedDate)
             : query.OrderBy(paginationParams.OrderKey, paginationParams.OrderType ?? "ascending");
 
-        query = query
+        pagedQuery = pagedQuery
             .Skip((paginationParams.PageId - 1) * paginationParams.PageSize)
             .Take(paginationParams.PageSize);
 
-        return (query, count);
+        int totalCount = await countTask;
+
+        return (pagedQuery, totalCount);
     }
 
     public IQueryable<TEntity> Where(Expression<Func<TEntity, bool>> predicate) => _dbSet.Where(predicate);

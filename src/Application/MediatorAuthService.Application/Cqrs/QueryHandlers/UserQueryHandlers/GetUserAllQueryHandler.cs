@@ -6,9 +6,11 @@ using MediatorAuthService.Application.Wrappers;
 using MediatorAuthService.Domain.Core.Pagination;
 using MediatorAuthService.Domain.Entities;
 using MediatorAuthService.Infrastructure.Data.Context;
+using MediatorAuthService.Infrastructure.Extensions;
 using MediatorAuthService.Infrastructure.UnitOfWork;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 using System.Net;
 
 namespace MediatorAuthService.Application.Cqrs.QueryHandlers.UserQueryHandlers;
@@ -17,18 +19,19 @@ public class GetUserAllQueryHandler(IUnitOfWork<AppDbContext> _unitOfWork, IMapp
 {
     public async Task<ApiResponse<List<UserDto>>> Handle(GetUserAllQuery request, CancellationToken cancellationToken)
     {
-        (IQueryable<User> userQuery, int totalCount) = _unitOfWork.GetRepository<User>()
-            .GetAll(new PaginationParams
+        (IQueryable<User> userQuery, int totalCount) = await _unitOfWork.GetRepository<User>()
+            .GetAllAsync(new PaginationParams
             {
                 PageId = request.PageId,
                 PageSize = request.PageSize,
                 OrderKey = request.OrderKey,
                 OrderType = request.OrderType
-            });
+            },
+                predicate: BuildPredicate(request),
+                cancellationToken: cancellationToken
+            );
 
-        IQueryable<User> filteredData = ApplyFilter(userQuery, request.Name, request.Surname, request.Email, request.IsActive);
-
-        List<UserDto> items = await filteredData
+        List<UserDto> items = await userQuery
             .ProjectTo<UserDto>(_mapper.ConfigurationProvider)
             .ToListAsync(cancellationToken);
 
@@ -41,20 +44,24 @@ public class GetUserAllQueryHandler(IUnitOfWork<AppDbContext> _unitOfWork, IMapp
         };
     }
 
-    private static IQueryable<User> ApplyFilter(IQueryable<User> source, string? name, string? surname, string? email, bool? isActive)
+    private static Expression<Func<User, bool>>? BuildPredicate(GetUserAllQuery request)
     {
-        if (!string.IsNullOrEmpty(name))
-            source = source.Where(x => x.Name.Contains(name));
+        var predicates = new List<Expression<Func<User, bool>>>();
 
-        if (!string.IsNullOrEmpty(surname))
-            source = source.Where(x => x.Surname.Contains(surname));
+        if (!string.IsNullOrEmpty(request.Name))
+            predicates.Add(x => x.Name.Contains(request.Name));
 
-        if (!string.IsNullOrEmpty(email))
-            source = source.Where(x => x.Email.Contains(email));
+        if (!string.IsNullOrEmpty(request.Surname))
+            predicates.Add(x => x.Surname.Contains(request.Surname));
 
-        if (isActive is not null)
-            source = source.Where(x => x.IsActive.Equals(isActive));
+        if (!string.IsNullOrEmpty(request.Email))
+            predicates.Add(x => x.Email.Contains(request.Email));
 
-        return source;
+        if (request.IsActive is not null)
+            predicates.Add(x => x.IsActive == request.IsActive);
+
+        if (predicates.Count == 0) return null;
+
+        return predicates.Aggregate((a, b) => a.And(b));
     }
 }
