@@ -37,6 +37,7 @@ public static class DatabaseInitializationExtension
 
         SeedOptions seedOptions = serviceScope.ServiceProvider.GetRequiredService<IOptions<SeedOptions>>().Value;
 
+        await db.DisableLegacyDefaultAdminAsync(logger);
         await db.SeedSuperAdminAsync(seedOptions, logger);
     }
 

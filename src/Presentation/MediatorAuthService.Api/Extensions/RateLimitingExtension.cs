@@ -20,7 +20,7 @@ internal static class RateLimitingExtension
 {
     /// <summary>
     /// Policy for credential endpoints (login, refresh, logout, change password), partitioned by client IP.
-    /// Behind a reverse proxy, configure forwarded headers so that the real client IP is used.
+    /// Behind a reverse proxy, list it under ForwardedHeaders so that the real client IP is used (see ForwardedHeadersExtension).
     /// </summary>
     public const string AuthPolicy = "auth";
 

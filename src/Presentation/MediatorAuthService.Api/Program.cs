@@ -55,6 +55,9 @@ builder.Services.AddObservability(builder.Configuration);
 
 WebApplication app = builder.Build();
 
+// First in the pipeline, so that logging, HTTPS redirection and rate limiting see the real client.
+app.UseConfiguredForwardedHeaders();
+
 // Request logging wraps the exception handler so that it records the final status code, not 500 for handled exceptions.
 app.UseSerilogRequestLoggingWithEnrichment();
 

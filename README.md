@@ -86,7 +86,7 @@ This project is an authentication and authorization microservice based on .NET 1
 - Send the access token as `Authorization: Bearer <accessToken>`.
 - Refresh tokens are single-use. Presenting a used token again revokes every session of the user.
 - Changing the password, deactivating or deleting a user ends all of their sessions immediately, including issued access tokens.
-- After 5 failed login attempts the account is locked for 15 minutes (`Lockout` section). Credential endpoints are rate limited per IP (`RateLimiting:Auth`).
+- After 5 failed login attempts the account is locked for 15 minutes (`Lockout` section). Credential endpoints are rate limited per IP (`RateLimiting:Auth`); behind a reverse proxy, configure `ForwardedHeaders`. A locked account gets the same error as a wrong password.
 
 ## Authorization
 Endpoints are protected by **permissions** (e.g. `Users.Read`, `Roles.Update`). Permissions are defined in code
@@ -116,7 +116,7 @@ Rules that prevent privilege escalation:
 The first SuperAdmin is created from `Seed:AdminEmail` / `Seed:AdminPassword` while no SuperAdmin exists. If a user with that e-mail already exists, the role is assigned without changing the password.
 No credentials are hard-coded.
 
-> **Upgrading from an earlier version:** earlier versions seeded `admin@gmail.com` with a publicly known password. Delete that account or change its password, and do not use it as `Seed:AdminEmail` without changing the password first.
+> **Upgrading from an earlier version:** earlier versions seeded `admin@gmail.com` with a publicly known password. If that account still uses it, it is disabled at startup. It can be promoted with `Seed:AdminEmail` only when `Seed:AdminPassword` is also set, which replaces the old password.
 
 ## Configuration
 - All configurations are managed via the `appsettings.json` file or environment variables.
@@ -131,6 +131,7 @@ No credentials are hard-coded.
 | `Seed` | First SuperAdmin. |
 | `Database:InitializationMode` | `Migrate` (default), `EnsureCreated` or `None`. |
 | `HttpsRedirection:Enabled` | Disable when TLS is terminated by a proxy. |
+| `ForwardedHeaders:KnownProxies`, `ForwardedHeaders:KnownNetworks` | IP addresses / CIDR ranges of the reverse proxy. `X-Forwarded-For` is trusted only from these, so rate limiting and logs see the real client IP. Empty means the headers are ignored. |
 | `ElasticSearch` | Log sink. Leave `Uri` empty to disable; `Username`/`Password` for secured clusters. |
 | `OpenTelemetry:OtlpEndpoint` | Exports traces and metrics over OTLP when set. |
 

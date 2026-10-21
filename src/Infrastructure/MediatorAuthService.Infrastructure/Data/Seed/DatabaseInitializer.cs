@@ -19,11 +19,42 @@ public class SeedOptions
 
 public static class DatabaseInitializer
 {
+    // Credentials that earlier versions seeded unconditionally. They are public through the repository history.
+    private const string LegacyAdminEmail = "admin@gmail.com";
+    private const string LegacyAdminPassword = "qwe123ASD!";
+
+    /// <summary>
+    /// Disables the administrator account that earlier versions created with hard-coded credentials, as long as
+    /// its password was never changed. Its sessions are ended and the security stamp is rotated.
+    /// </summary>
+    public static async Task DisableLegacyDefaultAdminAsync(this AppDbContext context, ILogger logger, CancellationToken cancellationToken = default)
+    {
+        User? legacyAdmin = await context.Users
+            .Include(user => user.RefreshTokens)
+            .SingleOrDefaultAsync(user => user.Email == LegacyAdminEmail, cancellationToken);
+
+        if (legacyAdmin is not { IsActive: true } || !HasLegacyPassword(legacyAdmin))
+            return;
+
+        DateTime now = DateTime.UtcNow;
+
+        legacyAdmin.IsActive = false;
+        legacyAdmin.RotateSecurityStamp();
+
+        foreach (RefreshToken token in legacyAdmin.RefreshTokens.Where(token => token.IsActive(now)))
+            token.RevokedAt = now;
+
+        await context.SaveChangesAsync(cancellationToken);
+
+        logger.LogWarning("The legacy default administrator {Email} still used its publicly known password and has been disabled.", LegacyAdminEmail);
+    }
+
     /// <summary>
     /// Bootstraps the first SuperAdmin from configuration (Seed:AdminEmail / Seed:AdminPassword).
     /// Runs only while no SuperAdmin exists. If the configured user already exists, the role is assigned
     /// without touching the password; otherwise the user is created with the configured password.
-    /// No credentials are hard-coded.
+    /// The legacy default administrator is the exception: it is promoted only when Seed:AdminPassword is set,
+    /// and its publicly known password is replaced with it.
     /// </summary>
     public static async Task SeedSuperAdminAsync(this AppDbContext context, SeedOptions options, ILogger logger, CancellationToken cancellationToken = default)
     {
@@ -57,6 +88,18 @@ public static class DatabaseInitializer
             };
             context.Users.Add(adminUser);
         }
+        else if (HasLegacyPassword(adminUser))
+        {
+            if (string.IsNullOrWhiteSpace(options.AdminPassword))
+            {
+                logger.LogWarning("The user {Email} still uses the legacy default password. Set Seed:AdminPassword to replace it before it can become SuperAdmin.", email);
+                return;
+            }
+
+            adminUser.Password = HashingManager.HashValue(options.AdminPassword);
+            adminUser.IsActive = true;
+            adminUser.RotateSecurityStamp();
+        }
 
         adminUser.UserRoles.Add(new UserRole { RoleId = SystemRoles.SuperAdminId });
 
@@ -64,4 +107,7 @@ public static class DatabaseInitializer
 
         logger.LogInformation("SuperAdmin role assigned to {Email}.", email);
     }
+
+    private static bool HasLegacyPassword(User user) =>
+        user.Email == LegacyAdminEmail && HashingManager.VerifyHashedValue(user.Password, LegacyAdminPassword);
 }
