@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Primitives;
+using System.Collections.Concurrent;
 
 namespace MediatorAuthService.Infrastructure.Security;
 
@@ -19,6 +20,10 @@ internal sealed class UserAccessService(IServiceScopeFactory _scopeFactory, IMem
 
     private CancellationTokenSource _resetTokenSource = new();
 
+    // One source per user, so that Invalidate also expires an entry whose load was already in flight.
+    // Entries stay small and are bounded by the number of users who have made a request.
+    private readonly ConcurrentDictionary<Guid, CancellationTokenSource> _userTokenSources = new();
+
     public async Task<UserAccessSnapshot?> GetAsync(Guid userId, CancellationToken cancellationToken)
     {
         string cacheKey = CacheKey(userId);
@@ -28,17 +33,25 @@ internal sealed class UserAccessService(IServiceScopeFactory _scopeFactory, IMem
 
         // Captured before loading so that an invalidation during the load expires the entry immediately.
         CancellationToken resetToken = _resetTokenSource.Token;
+        CancellationToken userToken = _userTokenSources.GetOrAdd(userId, _ => new CancellationTokenSource()).Token;
 
         snapshot = await LoadAsync(userId, cancellationToken);
 
         _cache.Set(cacheKey, snapshot, new MemoryCacheEntryOptions()
             .SetAbsoluteExpiration(CacheDuration)
-            .AddExpirationToken(new CancellationChangeToken(resetToken)));
+            .AddExpirationToken(new CancellationChangeToken(resetToken))
+            .AddExpirationToken(new CancellationChangeToken(userToken)));
 
         return snapshot;
     }
 
-    public void Invalidate(Guid userId) => _cache.Remove(CacheKey(userId));
+    public void Invalidate(Guid userId)
+    {
+        if (_userTokenSources.TryRemove(userId, out CancellationTokenSource? previous))
+            previous.Cancel();
+
+        _cache.Remove(CacheKey(userId));
+    }
 
     public void InvalidateAll()
     {

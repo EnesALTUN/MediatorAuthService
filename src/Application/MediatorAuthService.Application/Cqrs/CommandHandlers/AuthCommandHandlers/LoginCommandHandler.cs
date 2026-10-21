@@ -19,7 +19,8 @@ namespace MediatorAuthService.Application.Cqrs.CommandHandlers.AuthCommandHandle
 /// Verifies the credentials and issues an access token and a refresh token.
 /// - Unknown e-mail addresses and wrong passwords return the same error, and an unknown address still pays the hashing cost
 ///   so that response times do not reveal which addresses are registered.
-/// - Consecutive failed attempts lock the account for a configured period.
+/// - Consecutive failed attempts lock the account for a configured period. A locked account returns the same error,
+///   so the lockout cannot be used to find out which addresses are registered.
 /// </summary>
 public class LoginCommandHandler(IUnitOfWork _unitOfWork, IAuthSessionService _authSessionService, IOptions<LockoutOptions> _lockoutOptions) : IRequestHandler<LoginCommand, ApiResponse<TokenDto>>
 {
@@ -43,10 +44,13 @@ public class LoginCommandHandler(IUnitOfWork _unitOfWork, IAuthSessionService _a
 
         DateTime now = DateTime.UtcNow;
 
-        if (existUser.IsLockedOut(now))
-            throw new UnauthorizedException("Too many failed login attempts. Please try again later.");
+        // The hash is verified even for a locked account, so that lockout is not revealed through timing.
+        bool isPasswordValid = HashingManager.VerifyHashedValue(existUser.Password, request.Password);
 
-        if (!HashingManager.VerifyHashedValue(existUser.Password, request.Password))
+        if (existUser.IsLockedOut(now))
+            throw new UnauthorizedException(InvalidCredentialsMessage);
+
+        if (!isPasswordValid)
         {
             await RegisterFailedAttemptAsync(existUser, now, cancellationToken);
             throw new UnauthorizedException(InvalidCredentialsMessage);

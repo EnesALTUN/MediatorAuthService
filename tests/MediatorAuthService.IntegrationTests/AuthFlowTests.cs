@@ -44,9 +44,10 @@ public class AuthFlowTests(AuthApiFactory factory) : IntegrationTestBase(factory
             Assert.Equal(HttpStatusCode.Unauthorized, (await client.LoginAsync(user.Email, "Wrong1!")).StatusCode);
 
         HttpResponseMessage locked = await client.LoginAsync(user.Email, ApiClientExtensions.DefaultPassword);
+        HttpResponseMessage unknown = await client.LoginAsync(ApiClientExtensions.UniqueEmail(), ApiClientExtensions.DefaultPassword);
 
         Assert.Equal(HttpStatusCode.Unauthorized, locked.StatusCode);
-        Assert.Contains("Too many failed login attempts", (await locked.ReadErrorsAsync()).Single());
+        Assert.Equal(await unknown.ReadErrorsAsync(), await locked.ReadErrorsAsync());
     }
 
     [Fact]
@@ -87,6 +88,22 @@ public class AuthFlowTests(AuthApiFactory factory) : IntegrationTestBase(factory
 
         Assert.Equal(HttpStatusCode.NoContent, logout.StatusCode);
         Assert.Equal(HttpStatusCode.Unauthorized, (await client.RefreshAsync(token.RefreshToken)).StatusCode);
+    }
+
+    [Fact]
+    public async Task RefreshToken_RevokedByLogout_DoesNotEndOtherSessions()
+    {
+        HttpClient adminClient = await CreateAdminClientAsync();
+        UserDto user = await adminClient.CreateUserAsync(ApiClientExtensions.UniqueEmail());
+        HttpClient client = CreateClient();
+
+        TokenDto loggedOut = await client.LoginSuccessfullyAsync(user.Email, ApiClientExtensions.DefaultPassword);
+        TokenDto other = await client.LoginSuccessfullyAsync(user.Email, ApiClientExtensions.DefaultPassword);
+        await client.PostAsJsonAsync("/api/v1/Auth/logout", new { refreshToken = loggedOut.RefreshToken });
+
+        Assert.Equal(HttpStatusCode.Unauthorized, (await client.RefreshAsync(loggedOut.RefreshToken)).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await GetMeAsync(CreateClient().WithToken(other.AccessToken))).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await client.RefreshAsync(other.RefreshToken)).StatusCode);
     }
 
     [Fact]
