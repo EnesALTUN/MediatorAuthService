@@ -51,6 +51,22 @@ This project is an authentication and authorization microservice based on .NET 1
     ```
    The API listens on `http://localhost:5216`. The container runs as a non-root user and serves plain HTTP; terminate TLS at a reverse proxy.
 
+> **Upgrading an existing Docker setup:** SQL Server no longer runs as root and now stores everything in a single
+> `mediator_sqlserver` volume instead of `mediator_sqlserver_data` / `mediator_sqlserver_log`. Without the steps below,
+> `docker compose up` starts with an empty database and the old volumes are left unused. Copy the old data once and hand it
+> to the `mssql` user (UID 10001). Volume names are prefixed with the compose project name, `mediatorauthservice` by default:
+> ```bash
+> docker compose create s_sqlserver
+> docker run --rm \
+>   -v mediatorauthservice_mediator_sqlserver_data:/old/data \
+>   -v mediatorauthservice_mediator_sqlserver_log:/old/log \
+>   -v mediatorauthservice_mediator_sqlserver:/new \
+>   alpine sh -c "mkdir -p /new/data /new/log && cp -a /old/data/. /new/data/ && cp -a /old/log/. /new/log/ && chown -R 10001:0 /new"
+> docker compose up -d
+> ```
+> In Git Bash on Windows, run `export MSYS_NO_PATHCONV=1` first so that the container paths are not rewritten.
+> Once the data is verified, the old volumes can be removed with `docker volume rm`.
+
 ### Option B: Running without Docker
 
 3. Initialize User Secrets (run this once if you are using it for the first time to securely store sensitive data in the development environment):
