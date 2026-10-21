@@ -1,50 +1,70 @@
-﻿using AutoMapper;
-using FluentValidation;
+﻿using MediatorAuthService.Application.Common.Abstractions;
+using MediatorAuthService.Application.Common.Persistence;
 using MediatorAuthService.Application.Cqrs.Commands.AuthCommands;
-using MediatorAuthService.Application.Cqrs.Queries.AuthQueries;
 using MediatorAuthService.Application.Dtos.AuthDtos;
-using MediatorAuthService.Application.Dtos.UserDtos;
 using MediatorAuthService.Application.Exceptions;
+using MediatorAuthService.Application.Services;
 using MediatorAuthService.Application.Wrappers;
-using MediatorAuthService.Domain.Core.Extensions;
 using MediatorAuthService.Domain.Entities;
-using MediatorAuthService.Infrastructure.UnitOfWork;
 using MediatR;
-using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System.Net;
 
 namespace MediatorAuthService.Application.Cqrs.CommandHandlers.AuthCommandHandlers;
 
 /// <summary>
-/// It queries the database for the record matching the request owner's ID information and the sent refresh token information.
-/// If a matching record is found, new token information is generated and returned and the user's refresh token information is updated.
-/// If no matching record is found, an error is returned.
+/// Exchanges a refresh token for a new token pair (rotation). No access token is required, so an expired session can be renewed.
+/// - The presented token is revoked and linked to its replacement.
+/// - Presenting an already revoked token is treated as theft: every session of the user is revoked
+///   and the security stamp is rotated, which also invalidates issued access tokens.
 /// </summary>
-public class CreateTokenByRefreshTokenCommandHandler(IUnitOfWork _unitOfWork, IMapper _mapper, IMediator _mediator, IHttpContextAccessor _httpContextAccessor) : IRequestHandler<CreateTokenByRefreshTokenCommand, ApiResponse<TokenDto>>
+public class CreateTokenByRefreshTokenCommandHandler(
+    IUnitOfWork _unitOfWork,
+    ITokenService _tokenService,
+    IAuthSessionService _authSessionService,
+    IUserAccessService _userAccessService,
+    ILogger<CreateTokenByRefreshTokenCommandHandler> _logger) : IRequestHandler<CreateTokenByRefreshTokenCommand, ApiResponse<TokenDto>>
 {
+    private const string InvalidTokenMessage = "The refresh token is invalid or has expired.";
+
     public async Task<ApiResponse<TokenDto>> Handle(CreateTokenByRefreshTokenCommand request, CancellationToken cancellationToken)
     {
-        Guid userId = _httpContextAccessor.HttpContext!.User.Id();
+        string tokenHash = _tokenService.HashRefreshToken(request.RefreshToken);
 
-        User? existUser = await _unitOfWork.GetRepository<User>()
-            .Where(user => user.Id.Equals(userId) && user.RefreshToken.Equals(request.RefreshToken) && user.IsActive)
+        RefreshToken existToken = await _unitOfWork.GetRepository<RefreshToken>()
+            .Where(token => token.TokenHash == tokenHash)
+            .Include(token => token.User)
             .SingleOrDefaultAsync(cancellationToken)
-          ?? throw new ValidationException("User or refresh token not found.");
+          ?? throw new UnauthorizedException(InvalidTokenMessage);
 
-        UserDto userDto = _mapper.Map<UserDto>(existUser);
+        DateTime now = DateTime.UtcNow;
 
-        ApiResponse<TokenDto> generatedToken = await _mediator.Send(new GenerateTokenQuery(userDto), cancellationToken);
+        if (existToken.RevokedAt is not null)
+        {
+            _logger.LogWarning("Refresh token reuse detected for user {UserId}. All sessions of the user are revoked.", existToken.UserId);
 
-        if (!generatedToken.IsSuccessful || generatedToken.Data is null)
-            throw new BusinessException("Failed to create token");
+            await _authSessionService.RevokeAllAsync(existToken.UserId, cancellationToken);
+            existToken.User.RotateSecurityStamp();
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            _userAccessService.Invalidate(existToken.UserId);
 
-        existUser.RefreshToken = generatedToken.Data.RefreshToken;
+            throw new UnauthorizedException(InvalidTokenMessage);
+        }
+
+        if (existToken.ExpiresAt <= now || !existToken.User.IsActive)
+            throw new UnauthorizedException(InvalidTokenMessage);
+
+        (TokenDto token, RefreshToken newRefreshToken) = await _authSessionService.IssueAsync(existToken.User, cancellationToken);
+
+        existToken.RevokedAt = now;
+        existToken.ReplacedByTokenId = newRefreshToken.Id;
+
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return new ApiResponse<TokenDto>
         {
-            Data = generatedToken.Data,
+            Data = token,
             IsSuccessful = true,
             StatusCode = (int)HttpStatusCode.OK,
             TotalItemCount = 1

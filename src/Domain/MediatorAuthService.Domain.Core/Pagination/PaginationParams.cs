@@ -1,10 +1,12 @@
-﻿namespace MediatorAuthService.Domain.Core.Pagination;
+namespace MediatorAuthService.Domain.Core.Pagination;
 
 public class PaginationParams
 {
-    public int PageId { get; set; }
+    public const int MaxPageSize = 100;
 
-    public int PageSize { get; set; }
+    public int PageId { get; set; } = 1;
+
+    public int PageSize { get; set; } = 10;
 
     public string? OrderKey { get; set; }
 

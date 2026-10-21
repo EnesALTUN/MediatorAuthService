@@ -1,8 +1,8 @@
 ﻿using FluentValidation;
-using MediatorAuthService.Application.Dtos.ConfigurationDtos;
-using MediatorAuthService.Application.Extensions;
+using MediatorAuthService.Application.Common.Authorization;
+using MediatorAuthService.Application.Common.Options;
 using MediatorAuthService.Application.PipelineBehaviours;
-using MediatR;
+using MediatorAuthService.Application.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
@@ -23,15 +23,12 @@ public static class DependencyInjection
             cfg.AddOpenBehavior(typeof(ValidationBehaviour<,>));
         });
 
-        services.AddAutoMapper(cfg => cfg.AddMaps(assembly));
+        services.AddValidatorsFromAssembly(assembly, includeInternalTypes: true);
 
-        services.AddValidatorsFromAssembly(assembly);
+        services.Configure<LockoutOptions>(configuration.GetSection(LockoutOptions.SectionName));
 
-        services.Configure<MediatorTokenOptions>(configuration.GetSection("JwtTokenOption"));
-
-        MediatorTokenOptions? tokenOption = configuration.GetSection("JwtTokenOption").Get<MediatorTokenOptions>() ?? throw new InvalidOperationException("JwtTokenOption section is missing or invalid in configuration.");
-        
-        services.AddMediatorJwtAuth(tokenOption);
+        services.AddScoped<IAccessGuard, AccessGuard>();
+        services.AddScoped<IAuthSessionService, AuthSessionService>();
 
         return services;
     }

@@ -1,4 +1,6 @@
-﻿using Serilog;
+﻿using MediatorAuthService.Api.Extensions;
+using Serilog;
+using System.Diagnostics;
 
 namespace MediatorAuthService.Api.Middlewares;
 
@@ -10,7 +12,7 @@ public static class SerilogRequestLoggingMiddleware
 {
     /// <summary>
     /// Adds Serilog request logging to the application pipeline with enriched context,
-    /// including correlation ID, user ID, request host, and user agent metadata.
+    /// including correlation ID (trace ID), user ID, request host, and user agent metadata.
     /// </summary>
     /// <param name="app">The <see cref="IApplicationBuilder"/> instance to configure.</param>
     /// <returns>The <see cref="IApplicationBuilder"/> instance for method chaining.</returns>
@@ -24,8 +26,8 @@ public static class SerilogRequestLoggingMiddleware
             {
                 diagnosticContext.Set("RequestHost", httpContext.Request.Host.Value);
                 diagnosticContext.Set("UserAgent", httpContext.Request.Headers.UserAgent.ToString());
-                diagnosticContext.Set("CorrelationId", httpContext.TraceIdentifier);
-                diagnosticContext.Set("UserId", httpContext.User.Identity?.Name);
+                diagnosticContext.Set("CorrelationId", Activity.Current?.TraceId.ToString() ?? httpContext.TraceIdentifier);
+                diagnosticContext.Set("UserId", httpContext.User.GetUserId());
             };
         });
 

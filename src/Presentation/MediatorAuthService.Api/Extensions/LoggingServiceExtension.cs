@@ -2,7 +2,7 @@
 using Elastic.Ingest.Elasticsearch.DataStreams;
 using Elastic.Serilog.Sinks;
 using Elastic.Transport;
-using MediatorAuthService.Application.Dtos.ConfigurationDtos;
+using MediatorAuthService.Api.Configuration;
 using Serilog;
 
 namespace MediatorAuthService.Api.Extensions;
@@ -16,17 +16,18 @@ public static class LoggingServiceExtension
     /// Adds Serilog with Elasticsearch logging integration to the application's host configuration.
     /// Configures Console and Elasticsearch sinks, and enriches log records with
     /// machine name, environment name, and application name metadata.
+    /// The Elasticsearch sink is skipped when ElasticSearch:Uri is empty; basic authentication is used
+    /// when ElasticSearch:Username and ElasticSearch:Password are set.
     /// </summary>
     /// <param name="hostBuilder">The <see cref="IHostBuilder"/> instance to which the logging configuration will be applied.</param>
-    /// <param name="configuration">The application configuration containing Elasticsearch connection settings.</param>
-    public static void AddElasticSearchLogging(this IHostBuilder hostBuilder, IConfiguration configuration)
+    public static void AddElasticSearchLogging(this IHostBuilder hostBuilder)
     {
-        var esConfig = configuration
-            .GetSection("ElasticSearch")
-            .Get<ElasticSearchConfiguration>()!;
-
         hostBuilder.UseSerilog((context, services, loggerConfig) =>
         {
+            ElasticSearchConfiguration esConfig = context.Configuration
+                .GetSection("ElasticSearch")
+                .Get<ElasticSearchConfiguration>() ?? new ElasticSearchConfiguration();
+
             loggerConfig
                 .ReadFrom.Configuration(context.Configuration)
                 .ReadFrom.Services(services)
@@ -35,15 +36,25 @@ public static class LoggingServiceExtension
                 .Enrich.WithEnvironmentName()
                 .Enrich.WithProperty("Application", "MediatorAuthService")
                 .WriteTo.Console(
-                    outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj} {Properties:j}{NewLine}{Exception}")
-                .WriteTo.Async(a => a.Elasticsearch(
-                    nodes: [new Uri(esConfig.Uri)],
-                    opts =>
-                    {
-                        opts.DataStream = new DataStreamName("logs", "mediator-auth-service");
-                        opts.BootstrapMethod = BootstrapMethod.Failure;
-                    }
-                ), bufferSize: 1000);
+                    outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj} {Properties:j}{NewLine}{Exception}");
+
+            if (string.IsNullOrWhiteSpace(esConfig.Uri))
+                return;
+
+            loggerConfig.WriteTo.Async(a => a.Elasticsearch(
+                nodes: [new Uri(esConfig.Uri)],
+                opts =>
+                {
+                    opts.DataStream = new DataStreamName("logs", "mediator-auth-service");
+                    // An unreachable Elasticsearch must not prevent the service from starting.
+                    opts.BootstrapMethod = BootstrapMethod.Silent;
+                },
+                transport =>
+                {
+                    if (!string.IsNullOrWhiteSpace(esConfig.Username) && !string.IsNullOrWhiteSpace(esConfig.Password))
+                        transport.Authentication(new BasicAuthentication(esConfig.Username, esConfig.Password));
+                }
+            ), bufferSize: 1000);
         });
     }
 }

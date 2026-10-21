@@ -5,9 +5,20 @@ namespace MediatorAuthService.Application.Validators.AuthValidators;
 
 public class CreateTokenByRefreshTokenValidator : AbstractValidator<CreateTokenByRefreshTokenCommand>
 {
-	public CreateTokenByRefreshTokenValidator()
-	{
-		RuleFor(x => x.RefreshToken)
-			.NotEmpty();
-	}
+    public CreateTokenByRefreshTokenValidator()
+    {
+        RuleFor(x => x.RefreshToken)
+            .NotEmpty()
+            .MaximumLength(256);
+    }
+}
+
+public class LogoutValidator : AbstractValidator<LogoutCommand>
+{
+    public LogoutValidator()
+    {
+        RuleFor(x => x.RefreshToken)
+            .NotEmpty()
+            .MaximumLength(256);
+    }
 }

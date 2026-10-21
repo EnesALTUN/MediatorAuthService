@@ -1,4 +1,5 @@
-﻿using MediatorAuthService.Application.Dtos.UserDtos;
+﻿using MediatorAuthService.Application.Common.Security;
+using MediatorAuthService.Application.Dtos.UserDtos;
 using MediatorAuthService.Application.Wrappers;
 using MediatorAuthService.Domain.Core.Pagination;
 using MediatR;
@@ -11,6 +12,7 @@ public class GetUserAllQuery : PaginationParams, IRequest<ApiResponse<List<UserD
 
     public string? Surname { get; set; }
 
+    [PersonalData]
     public string? Email { get; set; }
 
     public bool? IsActive { get; set; }

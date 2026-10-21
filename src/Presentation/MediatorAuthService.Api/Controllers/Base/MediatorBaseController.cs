@@ -10,26 +10,15 @@ namespace MediatorAuthService.Api.Controllers.Base;
 public class MediatorBaseController : ControllerBase
 {
     /// <summary>
-    /// It replaces the return status code with the status code from the service.
+    /// Returns the response with the status code set by the handler. 204 responses have no body.
     /// </summary>
     /// <typeparam name="TData"></typeparam>
     /// <param name="response"></param>
     /// <returns></returns>
-    public IActionResult ActionResultInstance<TData>(ApiResponse<TData> response) where TData : class
+    protected IActionResult ActionResultInstance<TData>(ApiResponse<TData> response)
     {
-        List<int> allowedHttpStatusReturnCodes = [
-            (int)HttpStatusCode.OK,
-            (int)HttpStatusCode.Created,
-            (int)HttpStatusCode.NoContent,
-            (int)HttpStatusCode.BadRequest,
-            (int)HttpStatusCode.NotFound
-        ];
-
-        return new ObjectResult(response)
-        {
-            StatusCode = allowedHttpStatusReturnCodes.Exists(allowedHttpStatusReturnCode => allowedHttpStatusReturnCode.Equals(response.StatusCode))
-                ? response.StatusCode
-                : (int)HttpStatusCode.Forbidden
-        };
+        return response.StatusCode == (int)HttpStatusCode.NoContent
+            ? NoContent()
+            : StatusCode(response.StatusCode, response);
     }
 }

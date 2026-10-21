@@ -1,21 +1,26 @@
-﻿using FluentValidation;
+﻿using MediatorAuthService.Application.Common.Authorization;
+using MediatorAuthService.Application.Common.Persistence;
 using MediatorAuthService.Application.Cqrs.Queries.UserQueries;
 using MediatorAuthService.Application.Dtos.UserDtos;
+using MediatorAuthService.Application.Exceptions;
 using MediatorAuthService.Application.Wrappers;
 using MediatorAuthService.Domain.Entities;
-using MediatorAuthService.Infrastructure.Data.Context;
-using MediatorAuthService.Infrastructure.UnitOfWork;
 using MediatR;
 using System.Net;
 
 namespace MediatorAuthService.Application.Cqrs.QueryHandlers.UserQueryHandlers;
 
-public class GetUserByIdQueryHandler(IUnitOfWork<AppDbContext> _unitOfWork) : IRequestHandler<GetUserByIdQuery, ApiResponse<UserDto>>
+/// <summary>
+/// Users can always read themselves; reading other users requires Users.Read.
+/// </summary>
+public class GetUserByIdQueryHandler(IUnitOfWork _unitOfWork, IAccessGuard _accessGuard) : IRequestHandler<GetUserByIdQuery, ApiResponse<UserDto>>
 {
     public async Task<ApiResponse<UserDto>> Handle(GetUserByIdQuery request, CancellationToken cancellationToken)
     {
-        UserDto? existUser = await _unitOfWork.GetRepository<User>().GetByIdWithProjectToAsync<UserDto>(request.Id, cancellationToken)
-            ?? throw new ValidationException("User is not found.");
+        await _accessGuard.EnsureSelfOrPermissionAsync(request.Id, Permissions.Users.Read, cancellationToken);
+
+        UserDto existUser = await _unitOfWork.GetRepository<User>().GetByIdAsync(request.Id, UserDto.Projection, cancellationToken)
+            ?? throw new NotFoundException("User is not found.");
 
         return new ApiResponse<UserDto>
         {

@@ -1,21 +1,27 @@
-FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+WORKDIR /src
+
+# Project files first so that the restore layer is cached until dependencies change.
+COPY src/Domain/MediatorAuthService.Domain.Core/*.csproj src/Domain/MediatorAuthService.Domain.Core/
+COPY src/Domain/MediatorAuthService.Domain/*.csproj src/Domain/MediatorAuthService.Domain/
+COPY src/Application/MediatorAuthService.Application/*.csproj src/Application/MediatorAuthService.Application/
+COPY src/Infrastructure/MediatorAuthService.Infrastructure/*.csproj src/Infrastructure/MediatorAuthService.Infrastructure/
+COPY src/Presentation/MediatorAuthService.Api/*.csproj src/Presentation/MediatorAuthService.Api/
+
+RUN dotnet restore src/Presentation/MediatorAuthService.Api/MediatorAuthService.Api.csproj
+
+COPY src/ src/
+RUN dotnet publish src/Presentation/MediatorAuthService.Api/MediatorAuthService.Api.csproj -c Release -o /app/publish --no-restore /p:UseAppHost=false
+
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
-EXPOSE 80
-EXPOSE 443
 
-COPY src/Domain/MediatorAuthService.Domain.Core/*.csproj ./Domain/MediatorAuthService.Domain.Core/
-COPY src/Domain/MediatorAuthService.Domain/*.csproj ./Domain/MediatorAuthService.Domain/
-COPY src/Infrastructure/MediatorAuthService.Infrastructure/*.csproj ./Infrastructure/MediatorAuthService.Infrastructure/
-COPY src/Application/MediatorAuthService.Application/*.csproj ./Application/MediatorAuthService.Application/
-COPY src/Presentation/MediatorAuthService.Api/*.csproj ./Presentation/MediatorAuthService.Api/
+ENV ASPNETCORE_HTTP_PORTS=8080
+EXPOSE 8080
 
-COPY ./*.sln .
+COPY --from=build /app/publish .
 
-RUN dotnet restore Presentation/MediatorAuthService.Api/*.csproj
-COPY . .
-RUN dotnet publish src/Presentation/MediatorAuthService.Api/*.csproj -o /publish/
+# Non-root user provided by the official .NET images.
+USER $APP_UID
 
-FROM mcr.microsoft.com/dotnet/aspnet:9.0
-WORKDIR /app
-COPY --from=build /publish .
 ENTRYPOINT ["dotnet", "MediatorAuthService.Api.dll"]
