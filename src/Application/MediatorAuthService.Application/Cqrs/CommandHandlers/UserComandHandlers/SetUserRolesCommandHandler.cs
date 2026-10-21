@@ -60,12 +60,16 @@ public class SetUserRolesCommandHandler(
 
         if (removedUserRoles.Any(userRole => userRole.RoleId == SystemRoles.SuperAdminId))
         {
-            int superAdminCount = await userRoleRepository
-                .Where(userRole => userRole.RoleId == SystemRoles.SuperAdminId)
-                .CountAsync(cancellationToken);
+            // Only an active SuperAdmin can recover the system, so deactivated or deleted ones do not count.
+            bool activeSuperAdminRemains = await userRoleRepository
+                .Where(userRole => userRole.RoleId == SystemRoles.SuperAdminId
+                    && userRole.UserId != request.UserId
+                    && userRole.User.IsActive
+                    && userRole.User.DeletedDate == null)
+                .AnyAsync(cancellationToken);
 
-            if (superAdminCount <= 1)
-                throw new BusinessException("At least one SuperAdmin must remain.");
+            if (!activeSuperAdminRemains)
+                throw new BusinessException("At least one active SuperAdmin must remain.");
         }
 
         userRoleRepository.RemoveRange(removedUserRoles);

@@ -98,7 +98,22 @@ public class AuthorizationTests(AuthApiFactory factory) : IntegrationTestBase(fa
         HttpResponseMessage response = await adminClient.SetRolesAsync(admin.Id);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        Assert.Contains("At least one SuperAdmin", (await response.ReadErrorsAsync()).Single());
+        Assert.Contains("At least one active SuperAdmin", (await response.ReadErrorsAsync()).Single());
+    }
+
+    [Fact]
+    public async Task TheLastActiveSuperAdmin_CannotLoseTheRole_WhenOtherSuperAdminsAreInactive()
+    {
+        HttpClient adminClient = await CreateAdminClientAsync();
+        CurrentUserDto admin = await (await GetMeAsync(adminClient)).ReadDataAsync<CurrentUserDto>();
+        UserDto other = await adminClient.CreateUserAsync(ApiClientExtensions.UniqueEmail());
+        Assert.Equal(HttpStatusCode.OK, (await adminClient.SetRolesAsync(other.Id, SystemRoles.SuperAdminId)).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await UpdateUserAsync(adminClient, other, isActive: false)).StatusCode);
+
+        HttpResponseMessage response = await adminClient.SetRolesAsync(admin.Id);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Contains("At least one active SuperAdmin", (await response.ReadErrorsAsync()).Single());
     }
 
     [Fact]

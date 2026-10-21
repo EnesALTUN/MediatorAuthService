@@ -75,18 +75,23 @@ public class LoginCommandHandler(IUnitOfWork _unitOfWork, IAuthSessionService _a
         };
     }
 
+    /// <summary>
+    /// Increments the failed attempt counter and starts the lockout in a single UPDATE statement, so that concurrent
+    /// attempts cannot overwrite each other's increments. All assignments are evaluated against the row's previous values.
+    /// </summary>
     private async Task RegisterFailedAttemptAsync(User user, DateTime now, CancellationToken cancellationToken)
     {
         LockoutOptions lockoutOptions = _lockoutOptions.Value;
+        int maxAttempts = lockoutOptions.MaxFailedAccessAttempts;
+        DateTime lockoutEnd = now.AddMinutes(lockoutOptions.LockoutMinutes);
 
-        user.AccessFailedCount++;
-
-        if (user.AccessFailedCount >= lockoutOptions.MaxFailedAccessAttempts)
-        {
-            user.LockoutEnd = now.AddMinutes(lockoutOptions.LockoutMinutes);
-            user.AccessFailedCount = 0;
-        }
-
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.GetRepository<User>().Query()
+            .Where(existing => existing.Id == user.Id)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(existing => existing.LockoutEnd,
+                    existing => existing.AccessFailedCount + 1 >= maxAttempts ? lockoutEnd : existing.LockoutEnd)
+                .SetProperty(existing => existing.AccessFailedCount,
+                    existing => existing.AccessFailedCount + 1 >= maxAttempts ? 0 : existing.AccessFailedCount + 1),
+                cancellationToken);
     }
 }
