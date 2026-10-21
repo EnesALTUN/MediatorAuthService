@@ -1,5 +1,4 @@
-﻿using MediatorAuthService.Domain.Core.Extensions;
-using MediatorAuthService.Domain.Entities;
+﻿using MediatorAuthService.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -22,9 +21,12 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .IsRequired();
 
         builder.Property(x => x.Password)
+            .HasMaxLength(256)
             .IsRequired();
 
+        // Deleted users keep their row, so the address only has to be unique among live users.
         builder.HasIndex(x => x.Email)
-            .IsUnique();
+            .IsUnique()
+            .HasFilter("[DeletedDate] IS NULL");
     }
 }

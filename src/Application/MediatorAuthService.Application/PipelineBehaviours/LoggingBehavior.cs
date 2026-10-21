@@ -1,26 +1,22 @@
-﻿using MediatorAuthService.Application.Common.Security;
+﻿using MediatorAuthService.Application.Common.Abstractions;
+using MediatorAuthService.Application.Common.Security;
 using MediatR;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 
 namespace MediatorAuthService.Application.PipelineBehaviours;
 
-public class LoggingBehavior<TRequest, TResponse>(ILogger<LoggingBehavior<TRequest, TResponse>> logger, IHttpContextAccessor httpContextAccessor) : IPipelineBehavior<TRequest, TResponse>
+public class LoggingBehavior<TRequest, TResponse>(ILogger<LoggingBehavior<TRequest, TResponse>> logger, ICurrentUserService currentUserService) : IPipelineBehavior<TRequest, TResponse>
     where TRequest : IRequest<TResponse>
 {
     private readonly ILogger<LoggingBehavior<TRequest, TResponse>> _logger = logger;
 
     public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
     {
-        string? requestName = typeof(TRequest).Name;
-        string? userId = httpContextAccessor.HttpContext?.User?.Identity?.Name;
-        string? correlationId = httpContextAccessor.HttpContext?.TraceIdentifier;
-        Stopwatch? sw = Stopwatch.StartNew();
-
-        object? requestData = request is ISensitiveRequest
-            ? "[REDACTED]"
-            : LogSanitizer.Sanitize(request);
+        string requestName = typeof(TRequest).Name;
+        Guid? userId = currentUserService.UserId;
+        string? correlationId = Activity.Current?.TraceId.ToString();
+        Stopwatch sw = Stopwatch.StartNew();
 
         _logger.LogInformation("MediatR Request Started {@Log}",
             new
@@ -28,11 +24,11 @@ public class LoggingBehavior<TRequest, TResponse>(ILogger<LoggingBehavior<TReque
                 RequestName = requestName,
                 UserId = userId,
                 CorrelationId = correlationId,
-                Request = requestData
+                Request = LogSanitizer.Sanitize(request)
             }
         );
 
-        TResponse? response = await next(cancellationToken);
+        TResponse response = await next(cancellationToken);
 
         sw.Stop();
 

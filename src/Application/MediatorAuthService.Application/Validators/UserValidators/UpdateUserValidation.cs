@@ -8,12 +8,14 @@ public class UpdateUserValidation : AbstractValidator<UpdateUserCommand>
     public UpdateUserValidation()
     {
         RuleFor(x => x.Name)
-            .NotEmpty();
+            .NotEmpty()
+            .MaximumLength(ValidationRules.NameMaxLength);
 
         RuleFor(x => x.Surname)
-            .NotEmpty();
+            .NotEmpty()
+            .MaximumLength(ValidationRules.NameMaxLength);
 
         RuleFor(x => x.Email)
-            .NotEmpty();
+            .ValidEmail();
     }
 }

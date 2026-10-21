@@ -1,4 +1,4 @@
-﻿using MediatorAuthService.Domain.Core.Attributes;
+using MediatorAuthService.Domain.Core.Attributes;
 
 namespace MediatorAuthService.Domain.Core.Base.Concrete;
 
@@ -24,9 +24,4 @@ public abstract class BaseEntity
 
     [NotSortable]
     public Guid? DeletedUserId { get; set; }
-}
-
-public abstract class BaseEntity<TId> : BaseEntity where TId : struct
-{
-    public new TId Id { get; set; }
 }

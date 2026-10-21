@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc.ApiExplorer;
+﻿using Asp.Versioning.ApiExplorer;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
@@ -23,18 +23,17 @@ public class ConfigureSwaggerOptions(IApiVersionDescriptionProvider provider) : 
         foreach (var description in _provider.ApiVersionDescriptions)
             options.SwaggerDoc(description.GroupName, CreateVersionInfo(description));
 
-        // add jwt security
+        // add jwt bearer security (Swagger UI adds the "Bearer " prefix itself)
         options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
         {
             Name = "Authorization",
-            Type = SecuritySchemeType.ApiKey,
-            Scheme = "Bearer",
+            Type = SecuritySchemeType.Http,
+            Scheme = "bearer",
             BearerFormat = "JWT",
             In = ParameterLocation.Header,
-            Description = "JSON Web Token based security",
+            Description = "JSON Web Token based security. Paste the access token without the 'Bearer' prefix.",
         });
 
-        // add jwt bearer security
         options.AddSecurityRequirement(new OpenApiSecurityRequirement()
         {
             {
@@ -89,14 +88,14 @@ public static class AddSwaggerUIExtension
     /// <summary>
     /// Add SwaggerUI
     /// </summary>
-    public static IApplicationBuilder AddSwaggerUI(this IApplicationBuilder app, WebApplication webApp)
+    public static WebApplication AddSwaggerUI(this WebApplication app)
     {
-        return app.UseSwaggerUI(c =>
+        app.UseSwaggerUI(c =>
         {
-            IApiVersionDescriptionProvider apiVersionDescriptionProvider = webApp.Services.GetRequiredService<IApiVersionDescriptionProvider>();
-
-            foreach (string groupName in apiVersionDescriptionProvider.ApiVersionDescriptions.Select(description => description.GroupName))
+            foreach (string groupName in app.DescribeApiVersions().Select(description => description.GroupName))
                 c.SwaggerEndpoint($"/swagger/{groupName}/swagger.json", groupName.ToUpperInvariant());
         });
+
+        return app;
     }
 }

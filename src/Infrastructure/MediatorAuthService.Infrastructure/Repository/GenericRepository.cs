@@ -1,6 +1,4 @@
-﻿using AutoMapper;
-using AutoMapper.QueryableExtensions;
-using MediatorAuthService.Domain.Core.Base.Abstract;
+﻿using MediatorAuthService.Application.Common.Persistence;
 using MediatorAuthService.Domain.Core.Base.Concrete;
 using MediatorAuthService.Domain.Core.Pagination;
 using MediatorAuthService.Infrastructure.Extensions;
@@ -9,66 +7,50 @@ using System.Linq.Expressions;
 
 namespace MediatorAuthService.Infrastructure.Repository;
 
-public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEntity : BaseEntity, IEntity
+public class GenericRepository<TEntity>(DbContext context) : IGenericRepository<TEntity> where TEntity : class
 {
-    private readonly DbContext _context;
-    private readonly DbSet<TEntity> _dbSet;
-    private readonly IMapper _mapper;
+    private const string IdPropertyName = "Id";
 
-    public GenericRepository(DbContext context, IMapper mapper)
-    {
-        _context = context ?? throw new ArgumentNullException(nameof(context));
-        _dbSet = _context.Set<TEntity>();
-        _mapper = mapper;
-    }
+    private readonly DbSet<TEntity> _dbSet = context.Set<TEntity>();
 
-    public async Task<TEntity?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
-    {
-        TEntity? entity = await _dbSet.FindAsync([id], cancellationToken);
+    // Queried instead of DbSet.Find so that global query filters (soft delete) always apply.
+    public Task<TEntity?> GetByIdAsync(Guid id, CancellationToken cancellationToken) =>
+        _dbSet.SingleOrDefaultAsync(entity => EF.Property<Guid>(entity, IdPropertyName) == id, cancellationToken);
 
-        if (entity is not null)
-            _context.Entry(entity).State = EntityState.Detached;
+    public Task<TResult?> GetByIdAsync<TResult>(Guid id, Expression<Func<TEntity, TResult>> selector, CancellationToken cancellationToken) =>
+        _dbSet
+            .AsNoTracking()
+            .Where(entity => EF.Property<Guid>(entity, IdPropertyName) == id)
+            .Select(selector)
+            .SingleOrDefaultAsync(cancellationToken);
 
-        return entity;
-    }
-
-    public async Task<TDto?> GetByIdWithProjectToAsync<TDto>(Guid id, CancellationToken cancellationToken) where TDto : BaseDto
-    {
-        TDto? record = await _dbSet
-            .ProjectTo<TDto>(_mapper.ConfigurationProvider)
-            .SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
-
-        return record;
-    }
-
-    public async Task<(IQueryable<TEntity>, int)> GetAllAsync(
+    public async Task<(List<TResult> Items, int TotalCount)> GetPagedAsync<TResult>(
         PaginationParams paginationParams,
+        Expression<Func<TEntity, TResult>> selector,
         Expression<Func<TEntity, bool>>? predicate = null,
-        bool isNotTracking = true,
         CancellationToken cancellationToken = default)
     {
-        IQueryable<TEntity> query = _dbSet;
-
-        if (isNotTracking)
-            query = query.AsNoTracking();
+        IQueryable<TEntity> query = _dbSet.AsNoTracking();
 
         if (predicate is not null)
             query = query.Where(predicate);
 
-        Task<int> countTask = query.CountAsync(cancellationToken);
+        int totalCount = await query.CountAsync(cancellationToken);
 
-        IQueryable<TEntity> pagedQuery = string.IsNullOrEmpty(paginationParams.OrderKey)
-            ? query.OrderByDescending(x => x.CreatedDate)
+        IQueryable<TEntity> orderedQuery = string.IsNullOrEmpty(paginationParams.OrderKey)
+            ? query.OrderBy(nameof(BaseEntity.CreatedDate), "descending")
             : query.OrderBy(paginationParams.OrderKey, paginationParams.OrderType ?? "ascending");
 
-        pagedQuery = pagedQuery
+        List<TResult> items = await orderedQuery
             .Skip((paginationParams.PageId - 1) * paginationParams.PageSize)
-            .Take(paginationParams.PageSize);
+            .Take(paginationParams.PageSize)
+            .Select(selector)
+            .ToListAsync(cancellationToken);
 
-        int totalCount = await countTask;
-
-        return (pagedQuery, totalCount);
+        return (items, totalCount);
     }
+
+    public IQueryable<TEntity> Query() => _dbSet.AsNoTracking();
 
     public IQueryable<TEntity> Where(Expression<Func<TEntity, bool>> predicate) => _dbSet.Where(predicate);
 
@@ -76,7 +58,7 @@ public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEnt
 
     public void Remove(TEntity entity) => _dbSet.Remove(entity);
 
-    public void Update(TEntity entity) => _context.Entry(entity).State = EntityState.Modified;
+    public void RemoveRange(IEnumerable<TEntity> entities) => _dbSet.RemoveRange(entities);
 
-    public async Task<bool> AnyAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken) => await _dbSet.AnyAsync(predicate, cancellationToken);
+    public Task<bool> AnyAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken) => _dbSet.AnyAsync(predicate, cancellationToken);
 }

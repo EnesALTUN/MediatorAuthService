@@ -1,41 +1,50 @@
-version: '3.4'
-
 services:
   mediatorauthservice.api:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_URLS=http://+:5216
       - ConnectionStrings:Default=${SQL_CONNECTION_STRING}
       - ElasticSearch:Uri=${ELASTIC_URI}
+      - ElasticSearch:Username=${ELASTIC_USERNAME:-}
+      - ElasticSearch:Password=${ELASTIC_PASSWORD:-}
       - JwtTokenOption:SecurityKey=${JWT_SECURITY_KEY}
       - MediatR:LicenseKey=${MEDIATR_LICENSE_KEY}
+      - Seed:AdminEmail=${SEED_ADMIN_EMAIL:-}
+      - Seed:AdminPassword=${SEED_ADMIN_PASSWORD:-}
+      - Cors:AllowedOrigins:0=${CORS_ALLOWED_ORIGIN:-http://localhost:3000}
+      # TLS is expected to be terminated by a reverse proxy in front of the container.
+      - HttpsRedirection:Enabled=false
     ports:
-      - "5216:5216"
-      - "7216:7216"
+      - "5216:8080"
     networks:
       - net_backendservices
       - sql_db
       - elastic_net
     depends_on:
       s_sqlserver:
-        condition: service_started
+        condition: service_healthy
       s_elasticsearch:
         condition: service_healthy
     restart: on-failure
 
   s_sqlserver:
-    user: root
-    ports: 
-      - 1453:1433
+    ports:
+      - "127.0.0.1:1453:1433"
     environment:
       - ACCEPT_EULA=Y
       - MSSQL_SA_PASSWORD=${SQL_PASSWORD}
     volumes:
-      - mediator_sqlserver_data:/var/opt/mssql/data
-      - mediator_sqlserver_log:/var/opt/mssql/log
+      - mediator_sqlserver:/var/opt/mssql
     networks:
       - sql_db
+    healthcheck:
+      # Newer images ship mssql-tools18, older ones mssql-tools.
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -Q 'SELECT 1' || /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
 
+  # Development-only setup: security is disabled, so the ports are bound to localhost.
   s_elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:9.0.0
     environment:
@@ -43,7 +52,7 @@ services:
       - xpack.security.enabled=false
       - ES_JAVA_OPTS=-Xms512m -Xmx512m
     ports:
-      - "9200:9200"
+      - "127.0.0.1:9200:9200"
     volumes:
       - mediator_elasticsearch_data:/usr/share/elasticsearch/data
     networks:
@@ -60,12 +69,12 @@ services:
     environment:
       - ELASTICSEARCH_HOSTS=${ELASTIC_URI}
     ports:
-      - "5601:5601"
+      - "127.0.0.1:5601:5601"
     networks:
       - elastic_net
     depends_on:
       s_elasticsearch:
-        condition: service_started
+        condition: service_healthy
 
 networks:
   net_backendservices:
@@ -78,6 +87,5 @@ networks:
     driver: bridge
 
 volumes:
-  mediator_sqlserver_data:
-  mediator_sqlserver_log:
+  mediator_sqlserver:
   mediator_elasticsearch_data:

@@ -11,6 +11,7 @@ public class CreateUserCommand : IRequest<ApiResponse<UserDto>>
 
     public required string Surname { get; set; }
 
+    [PersonalData]
     public required string Email { get; set; }
 
     [SensitiveData]

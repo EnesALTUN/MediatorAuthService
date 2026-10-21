@@ -1,4 +1,4 @@
-﻿using System.Security.Cryptography;
+using System.Security.Cryptography;
 
 namespace MediatorAuthService.Domain.Core.Extensions;
 
@@ -13,12 +13,8 @@ public static class HashingManager
     {
         ArgumentNullException.ThrowIfNull(value);
 
-        using var rng = RandomNumberGenerator.Create();
-        byte[] salt = new byte[SaltSize];
-        rng.GetBytes(salt);
-
-        using var pbkdf2 = new Rfc2898DeriveBytes(value, salt, Iterations, HashAlgorithmName.SHA512);
-        byte[] hash = pbkdf2.GetBytes(HashSize);
+        byte[] salt = RandomNumberGenerator.GetBytes(SaltSize);
+        byte[] hash = Rfc2898DeriveBytes.Pbkdf2(value, salt, Iterations, HashAlgorithmName.SHA512, HashSize);
 
         // [0] = version, [1..16] = salt, [17..80] = hash
         byte[] hashBytes = new byte[1 + SaltSize + HashSize];
@@ -29,24 +25,30 @@ public static class HashingManager
         return Convert.ToBase64String(hashBytes);
     }
 
-    public static bool VerifyHashedValue(string hashedValue, string value)
+    public static bool VerifyHashedValue(string? hashedValue, string value)
     {
-        if (hashedValue is null) return false;
         ArgumentNullException.ThrowIfNull(value);
 
-        byte[] hashBytes = Convert.FromBase64String(hashedValue);
+        if (string.IsNullOrEmpty(hashedValue)) return false;
+
+        byte[] hashBytes;
+
+        try
+        {
+            hashBytes = Convert.FromBase64String(hashedValue);
+        }
+        catch (FormatException)
+        {
+            return false;
+        }
 
         if (hashBytes.Length != 1 + SaltSize + HashSize) return false;
         if (hashBytes[0] != Version) return false;
 
-        byte[] salt = new byte[SaltSize];
-        Buffer.BlockCopy(hashBytes, 1, salt, 0, SaltSize);
+        byte[] salt = hashBytes[1..(1 + SaltSize)];
+        byte[] hash = hashBytes[(1 + SaltSize)..];
 
-        byte[] hash = new byte[HashSize];
-        Buffer.BlockCopy(hashBytes, 1 + SaltSize, hash, 0, HashSize);
-
-        using var pbkdf2 = new Rfc2898DeriveBytes(value, salt, Iterations, HashAlgorithmName.SHA512);
-        byte[] computedHash = pbkdf2.GetBytes(HashSize);
+        byte[] computedHash = Rfc2898DeriveBytes.Pbkdf2(value, salt, Iterations, HashAlgorithmName.SHA512, HashSize);
 
         return CryptographicOperations.FixedTimeEquals(hash, computedHash);
     }

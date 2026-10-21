@@ -1,64 +1,74 @@
-﻿using AutoMapper;
-using FluentValidation;
+﻿using MediatorAuthService.Application.Common.Abstractions;
+using MediatorAuthService.Application.Common.Authorization;
+using MediatorAuthService.Application.Common.Extensions;
+using MediatorAuthService.Application.Common.Persistence;
 using MediatorAuthService.Application.Cqrs.Commands.UserCommands;
 using MediatorAuthService.Application.Dtos.UserDtos;
 using MediatorAuthService.Application.Exceptions;
+using MediatorAuthService.Application.Services;
 using MediatorAuthService.Application.Wrappers;
-using MediatorAuthService.Domain.Core.Extensions;
 using MediatorAuthService.Domain.Entities;
-using MediatorAuthService.Infrastructure.UnitOfWork;
 using MediatR;
 using System.Net;
 
 namespace MediatorAuthService.Application.Cqrs.CommandHandlers.UserComandHandlers;
 
 /// <summary>
-/// The ID information of the request owner is searched in the database.
-/// - If a matching record is found, first the user's email address in the system is compared with the email address received from the request.
-///     In this comparison, if the user's email address wants to be changed, it is checked that the user has entered an email address that does not exist in the system.
-/// - If the user's old password and full password are sent, the old password in the request is compared with the user password in the system.
-///     If the comparison result is successful, the new password from the request is assigned to the user; if unsuccessful, an error is returned to the user.
+/// Updates the profile of a user. Users may update themselves; updating someone else requires Users.Update
+/// and permissions covering those of the target user.
+/// - If the e-mail address changes, it must not belong to another user.
+/// - Deactivating a user ends all of their sessions. Users cannot change their own activation status.
+/// Passwords are changed through the change-password endpoint.
 /// </summary>
-public class UpdateUserCommandHandler(IUnitOfWork _unitOfWork, IMapper _mapper) : IRequestHandler<UpdateUserCommand, ApiResponse<UserDto>>
+public class UpdateUserCommandHandler(
+    IUnitOfWork _unitOfWork,
+    IAccessGuard _accessGuard,
+    IAuthSessionService _authSessionService,
+    IUserAccessService _userAccessService) : IRequestHandler<UpdateUserCommand, ApiResponse<UserDto>>
 {
     public async Task<ApiResponse<UserDto>> Handle(UpdateUserCommand request, CancellationToken cancellationToken)
     {
-        User? existUser = await _unitOfWork.GetRepository<User>().GetByIdAsync(request.Id, cancellationToken) 
-            ?? throw new ValidationException("User is not found.");
+        bool isSelf = await _accessGuard.EnsureSelfOrPermissionAsync(request.Id, Permissions.Users.Update, cancellationToken);
+        await _accessGuard.EnsureCanManageUserAsync(request.Id, cancellationToken);
 
-        if (!await ExistingEMailControlInEMailExchange(existUser.Email, request.Email, cancellationToken))
-            throw new BusinessException("The entered e-mail address is used.");
+        IGenericRepository<User> repository = _unitOfWork.GetRepository<User>();
 
-        request.Password = string.IsNullOrEmpty(request.OldPassword) || string.IsNullOrEmpty(request.Password)
-            ? existUser.Password
-            : ChangePasswordProcess(existUser.Password, request.OldPassword, request.Password);
+        User existUser = await repository.GetByIdAsync(request.Id, cancellationToken)
+            ?? throw new NotFoundException("User is not found.");
 
-        _mapper.Map(request, existUser);
+        string email = request.Email.NormalizeEmail();
 
-        _unitOfWork.GetRepository<User>().Update(existUser);
+        if (!string.Equals(existUser.Email, email, StringComparison.OrdinalIgnoreCase)
+            && await repository.AnyAsync(user => user.Email == email && user.Id != existUser.Id, cancellationToken))
+            throw new ConflictException("The entered e-mail address is used.");
+
+        existUser.Name = request.Name.Trim();
+        existUser.Surname = request.Surname.Trim();
+        existUser.Email = email;
+
+        if (request.IsActive is bool isActive && isActive != existUser.IsActive)
+        {
+            if (isSelf)
+                throw new ForbiddenException("You cannot change the activation status of your own account.");
+
+            existUser.IsActive = isActive;
+
+            if (!isActive)
+            {
+                existUser.RotateSecurityStamp();
+                await _authSessionService.RevokeAllAsync(existUser.Id, cancellationToken);
+            }
+        }
+
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+        _userAccessService.Invalidate(existUser.Id);
 
         return new ApiResponse<UserDto>
         {
-            Data = _mapper.Map<UserDto>(existUser),
+            Data = UserDto.FromEntity(existUser),
             IsSuccessful = true,
             StatusCode = (int)HttpStatusCode.OK,
             TotalItemCount = 1
         };
-    }
-
-    private async Task<bool> ExistingEMailControlInEMailExchange(string oldEmail, string newEmail, CancellationToken cancellationToken)
-    {
-        if (oldEmail.Equals(newEmail))
-            return true;
-
-        return !await _unitOfWork.GetRepository<User>().AnyAsync(user => user.Email.Equals(newEmail), cancellationToken);
-    }
-
-    private static string ChangePasswordProcess(string orjPassword, string oldPassword, string newPassword)
-    {
-        return HashingManager.VerifyHashedValue(orjPassword, oldPassword)
-                ? HashingManager.HashValue(newPassword)
-                : throw new ValidationException("Your password does not match.");
     }
 }

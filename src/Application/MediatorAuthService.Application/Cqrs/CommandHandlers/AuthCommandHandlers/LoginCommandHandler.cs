@@ -1,0 +1,97 @@
+﻿using MediatorAuthService.Application.Common.Extensions;
+using MediatorAuthService.Application.Common.Options;
+using MediatorAuthService.Application.Common.Persistence;
+using MediatorAuthService.Application.Cqrs.Commands.AuthCommands;
+using MediatorAuthService.Application.Dtos.AuthDtos;
+using MediatorAuthService.Application.Exceptions;
+using MediatorAuthService.Application.Services;
+using MediatorAuthService.Application.Wrappers;
+using MediatorAuthService.Domain.Core.Extensions;
+using MediatorAuthService.Domain.Entities;
+using MediatR;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using System.Net;
+
+namespace MediatorAuthService.Application.Cqrs.CommandHandlers.AuthCommandHandlers;
+
+/// <summary>
+/// Verifies the credentials and issues an access token and a refresh token.
+/// - Unknown e-mail addresses and wrong passwords return the same error, and an unknown address still pays the hashing cost
+///   so that response times do not reveal which addresses are registered.
+/// - Consecutive failed attempts lock the account for a configured period. A locked account returns the same error,
+///   so the lockout cannot be used to find out which addresses are registered.
+/// </summary>
+public class LoginCommandHandler(IUnitOfWork _unitOfWork, IAuthSessionService _authSessionService, IOptions<LockoutOptions> _lockoutOptions) : IRequestHandler<LoginCommand, ApiResponse<TokenDto>>
+{
+    private const string InvalidCredentialsMessage = "Invalid email or password.";
+
+    private static readonly string DummyPasswordHash = HashingManager.HashValue(Guid.NewGuid().ToString());
+
+    public async Task<ApiResponse<TokenDto>> Handle(LoginCommand request, CancellationToken cancellationToken)
+    {
+        string email = request.Email.NormalizeEmail();
+
+        User? existUser = await _unitOfWork.GetRepository<User>()
+            .Where(user => user.Email == email)
+            .SingleOrDefaultAsync(cancellationToken);
+
+        if (existUser is null)
+        {
+            HashingManager.VerifyHashedValue(DummyPasswordHash, request.Password);
+            throw new UnauthorizedException(InvalidCredentialsMessage);
+        }
+
+        DateTime now = DateTime.UtcNow;
+
+        // The hash is verified even for a locked account, so that lockout is not revealed through timing.
+        bool isPasswordValid = HashingManager.VerifyHashedValue(existUser.Password, request.Password);
+
+        if (existUser.IsLockedOut(now))
+            throw new UnauthorizedException(InvalidCredentialsMessage);
+
+        if (!isPasswordValid)
+        {
+            await RegisterFailedAttemptAsync(existUser, now, cancellationToken);
+            throw new UnauthorizedException(InvalidCredentialsMessage);
+        }
+
+        if (!existUser.IsActive)
+            throw new UnauthorizedException("The user account is disabled.");
+
+        existUser.AccessFailedCount = 0;
+        existUser.LockoutEnd = null;
+
+        (TokenDto token, _) = await _authSessionService.IssueAsync(existUser, cancellationToken);
+
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return new ApiResponse<TokenDto>
+        {
+            Data = token,
+            IsSuccessful = true,
+            StatusCode = (int)HttpStatusCode.OK,
+            TotalItemCount = 1
+        };
+    }
+
+    /// <summary>
+    /// Increments the failed attempt counter and starts the lockout in a single UPDATE statement, so that concurrent
+    /// attempts cannot overwrite each other's increments. All assignments are evaluated against the row's previous values.
+    /// </summary>
+    private async Task RegisterFailedAttemptAsync(User user, DateTime now, CancellationToken cancellationToken)
+    {
+        LockoutOptions lockoutOptions = _lockoutOptions.Value;
+        int maxAttempts = lockoutOptions.MaxFailedAccessAttempts;
+        DateTime lockoutEnd = now.AddMinutes(lockoutOptions.LockoutMinutes);
+
+        await _unitOfWork.GetRepository<User>().Query()
+            .Where(existing => existing.Id == user.Id)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(existing => existing.LockoutEnd,
+                    existing => existing.AccessFailedCount + 1 >= maxAttempts ? lockoutEnd : existing.LockoutEnd)
+                .SetProperty(existing => existing.AccessFailedCount,
+                    existing => existing.AccessFailedCount + 1 >= maxAttempts ? 0 : existing.AccessFailedCount + 1),
+                cancellationToken);
+    }
+}

@@ -1,5 +1,3 @@
-version: '3.4'
-
 services:
   mediatorauthservice.api:
     container_name: mediator_authservice
@@ -14,7 +12,7 @@ services:
 
   s_elasticsearch:
     container_name: mediator_authservice_elasticsearch
-    image: docker.elastic.co/elasticsearch/elasticsearch:9.0.0 
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.0.0
 
   s_kibana:
     container_name: mediator_authservice_kibana
